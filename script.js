@@ -1,4 +1,3 @@
-// 20回戦分の行を生成
 const scoreBody = document.getElementById('score-body');
 const pointBody = document.getElementById('point-body');
 const rankBody = document.getElementById('rank-body');
@@ -14,7 +13,6 @@ for (let i = 1; i <= 20; i++) {
     rankBody.innerHTML += `<tr><td>${i}</td><td id="r-${i}-1">-</td><td id="r-${i}-2">-</td><td id="r-${i}-3">-</td><td id="r-${i}-4">-</td></tr>`;
 }
 
-// 名前同期
 const ids = ['p1-name', 'p2-name', 'p3-name', 'p4-name'];
 ids.forEach((id, idx) => {
     document.getElementById(id).addEventListener('input', (e) => {
@@ -42,10 +40,8 @@ function calculateAll() {
             else scores.push(parseInt(val));
         }
 
-        // 4人分入力されている場合のみ計算
         if (scores.every(s => s !== null)) {
             gamesPlayed++;
-            // 順位判定
             let sorted = scores.map((s, idx) => ({s, idx})).sort((a, b) => b.s - a.s);
             let ranks = new Array(4);
             sorted.forEach((item, rIdx) => {
@@ -53,7 +49,6 @@ function calculateAll() {
                 rankSums[item.idx] += (rIdx + 1);
             });
 
-            // ポイント計算
             scores.forEach((s, idx) => {
                 let p = (s - returnPoint) / 1000 + uma[ranks[idx] - 1];
                 if (ranks[idx] === 1) p += oka;
@@ -65,7 +60,6 @@ function calculateAll() {
         }
     }
 
-    // 集計表示
     for (let j = 1; j <= 4; j++) {
         let chip = parseInt(document.getElementById(`chip${j}`).value) || 0;
         let finalPt = totals[j-1];
