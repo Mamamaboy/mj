@@ -14,10 +14,9 @@ table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
 th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
 th { background: #f8f9fa; }
 
-/* 各セクションの色分け */
-.score-section table thead th { background: #d1fae5; } /* 緑 */
-.point-section table thead th { background: #dbeafe; } /* 青 */
-.rank-section table thead th { background: #fef3c7; } /* 黄 */
+.score-section table thead th { background: #d1fae5; }
+.point-section table thead th { background: #dbeafe; }
+.rank-section table thead th { background: #fef3c7; }
 
 .calc-btn { width: 100%; padding: 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
 .calc-btn:hover { background: #059669; }
