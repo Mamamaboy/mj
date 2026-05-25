@@ -1,91 +1,81 @@
-let hanchanCount = 0;
+// 20回戦分の行を生成
+const scoreBody = document.getElementById('score-body');
+const pointBody = document.getElementById('point-body');
+const rankBody = document.getElementById('rank-body');
 
-// 名前入力が変更されたらテーブルの見出しも変更する機能
-const nameInputs = ['p1-name', 'p2-name', 'p3-name', 'p4-name'];
-nameInputs.forEach((id, index) => {
+for (let i = 1; i <= 20; i++) {
+    scoreBody.innerHTML += `<tr><td>${i}</td>` + 
+        `<td><input type="number" class="s-${i}-1" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-2" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-3" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-4" placeholder="0"></td></tr>`;
+    
+    pointBody.innerHTML += `<tr><td>${i}</td><td id="p-${i}-1">-</td><td id="p-${i}-2">-</td><td id="p-${i}-3">-</td><td id="p-${i}-4">-</td></tr>`;
+    rankBody.innerHTML += `<tr><td>${i}</td><td id="r-${i}-1">-</td><td id="r-${i}-2">-</td><td id="r-${i}-3">-</td><td id="r-${i}-4">-</td></tr>`;
+}
+
+// 名前同期
+const ids = ['p1-name', 'p2-name', 'p3-name', 'p4-name'];
+ids.forEach((id, idx) => {
     document.getElementById(id).addEventListener('input', (e) => {
-        document.getElementById(`label-p${index + 1}`).innerText = e.target.value;
+        document.querySelectorAll(`.p${idx+1}-label`).forEach(el => el.innerText = e.target.value);
     });
 });
 
-function calculate() {
-    // 1. 基本設定の取得
+function calculateAll() {
     const startPoint = parseInt(document.getElementById('start-point').value);
     const returnPoint = parseInt(document.getElementById('return-point').value);
-    const umaStr = document.getElementById('uma').value.split(',');
-    const uma = umaStr.map(Number);
+    const uma = document.getElementById('uma').value.split(',').map(Number);
     const rate = parseInt(document.getElementById('rate').value);
     const chipRate = parseInt(document.getElementById('chip-rate').value);
+    const oka = (returnPoint - startPoint) * 4 / 1000;
 
-    // 2. プレイヤー情報の取得
-    let players = [];
-    for (let i = 1; i <= 4; i++) {
-        players.push({
-            id: i,
-            name: document.getElementById(`p${i}-name`).value,
-            score: parseInt(document.getElementById(`score${i}`).value),
-            chip: parseInt(document.getElementById(`chip${i}`).value),
-            point: 0,
-            rank: 0,
-            totalMoney: 0
-        });
-    }
+    let totals = [0, 0, 0, 0];
+    let rankSums = [0, 0, 0, 0];
+    let gamesPlayed = 0;
 
-    // 3. 点数チェック（合計が 配点×4 になっているか）
-    const totalScore = players.reduce((sum, p) => sum + p.score, 0);
-    if (totalScore !== startPoint * 4) {
-        alert(`点数の合計が合いません！\n現在: ${totalScore} (あるべき合計: ${startPoint * 4})`);
-        return;
-    }
-
-    // 4. 順位の算出（点数の高い順にソート）
-    // 同点の場合は起家（今回は入力順）を優先するなどのルールがありますが、簡略化のため入力順を保持したままソートします
-    let sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-
-    // オカの計算 (返し点 - 配点) × 4 をトップに付与
-    const oka = ((returnPoint - startPoint) * 4) / 1000;
-
-    // 5. ポイントと合計金額の計算
-    sortedPlayers.forEach((p, index) => {
-        p.rank = index + 1;
-        
-        // ベースポイント = (持ち点 - 返し点) / 1000
-        let basePoint = (p.score - returnPoint) / 1000;
-        
-        // ウマを加算
-        p.point = basePoint + uma[index];
-
-        // 1位にはオカを加算し、端数調整（他3人のマイナス分を丸ごとプラスにする）
-        if (p.rank === 1) {
-            p.point += oka;
+    for (let i = 1; i <= 20; i++) {
+        let scores = [];
+        for (let j = 1; j <= 4; j++) {
+            let val = document.querySelector(`.s-${i}-${j}`).value;
+            if (val === "") scores.push(null);
+            else scores.push(parseInt(val));
         }
 
-        // 合計金額 = (ポイント × レート) + (チップ枚数 × チップレート)
-        p.totalMoney = (p.point * rate * 10) + (p.chip * chipRate); // ※レートが「テンゴ(50円)」などの場合、Pt×10倍×レート計算が一般的です。適宜調整してください。
-    });
+        // 4人分入力されている場合のみ計算
+        if (scores.every(s => s !== null)) {
+            gamesPlayed++;
+            // 順位判定
+            let sorted = scores.map((s, idx) => ({s, idx})).sort((a, b) => b.s - a.s);
+            let ranks = new Array(4);
+            sorted.forEach((item, rIdx) => {
+                ranks[item.idx] = rIdx + 1;
+                rankSums[item.idx] += (rIdx + 1);
+            });
 
-    // 6. 結果をテーブルに表示
-    hanchanCount++;
-    const tbody = document.getElementById('result-body');
-    
-    // 元の順番（座順）に戻して表示する
-    players.forEach(p => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>第${hanchanCount}戦</td>
-            <td>${p.name}</td>
-            <td>${p.score}</td>
-            <td>${p.rank}位</td>
-            <td><strong>${p.point.toFixed(1)}</strong></td>
-            <td>${p.chip}</td>
-            <td>¥${p.totalMoney.toLocaleString()}</td>
-        `;
-        tbody.appendChild(row);
-    });
+            // ポイント計算
+            scores.forEach((s, idx) => {
+                let p = (s - returnPoint) / 1000 + uma[ranks[idx] - 1];
+                if (ranks[idx] === 1) p += oka;
+                
+                document.getElementById(`p-${i}-${idx+1}`).innerText = p.toFixed(1);
+                document.getElementById(`r-${i}-${idx+1}`).innerText = ranks[idx];
+                totals[idx] += p;
+            });
+        }
+    }
 
-    // 入力欄のリセット（持ち点のみ）
-    for (let i = 1; i <= 4; i++) {
-        document.getElementById(`score${i}`).value = startPoint;
-        document.getElementById(`chip${i}`).value = 0;
+    // 集計表示
+    for (let j = 1; j <= 4; j++) {
+        let chip = parseInt(document.getElementById(`chip${j}`).value) || 0;
+        let finalPt = totals[j-1];
+        document.getElementById(`total-pt${j}`).innerText = finalPt.toFixed(1);
+        
+        let money = (finalPt * rate * 10) + (chip * chipRate);
+        document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
+        
+        if (gamesPlayed > 0) {
+            document.getElementById(`avg-rank${j}`).innerText = (rankSums[j-1] / gamesPlayed).toFixed(2);
+        }
     }
 }
