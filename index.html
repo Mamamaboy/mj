@@ -3,79 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理</title>
+    <title>麻雀成績管理システム - 一括入力版</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🀄 麻雀成績管理</h1>
+        <h1>🀄 麻雀成績管理（一括入力）</h1>
 
-        <section class="card">
+        <section class="card setting-section">
             <h2>基本設定</h2>
             <div class="settings-grid">
-                <label>参加者1: <input type="text" id="p1-name" value="Aさん"></label>
-                <label>参加者2: <input type="text" id="p2-name" value="Bさん"></label>
-                <label>参加者3: <input type="text" id="p3-name" value="Cさん"></label>
-                <label>参加者4: <input type="text" id="p4-name" value="Dさん"></label>
-                <label>配点: <input type="number" id="start-point" value="25000" step="1000"></label>
-                <label>返し点: <input type="number" id="return-point" value="30000" step="1000"></label>
-                <label>ウマ(1-4位): <input type="text" id="uma" value="20,10,-10,-20" placeholder="カンマ区切り"></label>
-                <label>レート(1pt=○円): <input type="number" id="rate" value="50"></label>
-                <label>チップレート(1枚=○円): <input type="number" id="chip-rate" value="500"></label>
+                <div class="names">
+                    <label>P1: <input type="text" id="p1-name" value="Aさん"></label>
+                    <label>P2: <input type="text" id="p2-name" value="Bさん"></label>
+                    <label>P3: <input type="text" id="p3-name" value="Cさん"></label>
+                    <label>P4: <input type="text" id="p4-name" value="Dさん"></label>
+                </div>
+                <div class="rules">
+                    <label>配点: <input type="number" id="start-point" value="25000"></label>
+                    <label>返し: <input type="number" id="return-point" value="30000"></label>
+                    <label>ウマ(1-4位): <input type="text" id="uma" value="10,5,-5,-10"></label>
+                    <label>レート(1pt=○円): <input type="number" id="rate" value="50"></label>
+                    <label>チップ(1枚=○円): <input type="number" id="chip-rate" value="500"></label>
+                </div>
             </div>
         </section>
 
-        <section class="card">
-            <h2>半荘入力</h2>
-            <table class="input-table">
-                <thead>
-                    <tr>
-                        <th>項目</th>
-                        <th id="label-p1">Aさん</th>
-                        <th id="label-p2">Bさん</th>
-                        <th id="label-p3">Cさん</th>
-                        <th id="label-p4">Dさん</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>持ち点 (半荘終了時)</td>
-                        <td><input type="number" id="score1" value="35000" step="100"></td>
-                        <td><input type="number" id="score2" value="25000" step="100"></td>
-                        <td><input type="number" id="score3" value="20000" step="100"></td>
-                        <td><input type="number" id="score4" value="20000" step="100"></td>
-                    </tr>
-                    <tr>
-                        <td>チップ (枚数)</td>
-                        <td><input type="number" id="chip1" value="2"></td>
-                        <td><input type="number" id="chip2" value="0"></td>
-                        <td><input type="number" id="chip3" value="-1"></td>
-                        <td><input type="number" id="chip4" value="-1"></td>
-                    </tr>
-                </tbody>
-            </table>
-            <button onclick="calculate()">計算して記録する</button>
+        <section class="card score-section">
+            <h2>点数入力（1〜20回戦）</h2>
+            <div class="table-wrapper">
+                <table id="score-table">
+                    <thead>
+                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                    </thead>
+                    <tbody id="score-body"></tbody>
+                </table>
+            </div>
         </section>
 
-        <section class="card">
-            <h2>成績表（結果）</h2>
-            <table class="result-table" id="result-table">
-                <thead>
-                    <tr>
-                        <th>半荘</th>
-                        <th>名前</th>
-                        <th>点数</th>
-                        <th>順位</th>
-                        <th>Pt (ウマ・オカ込)</th>
-                        <th>チップ</th>
-                        <th>合計金額(目安)</th>
-                    </tr>
-                </thead>
-                <tbody id="result-body">
-                    </tbody>
-            </table>
+        <button class="calc-btn" onclick="calculateAll()">全計算を実行する</button>
+
+        <section class="card point-section">
+            <h2>ポイント計算結果（ウマ・オカ・チップ込）</h2>
+            <div class="table-wrapper">
+                <table id="point-table">
+                    <thead>
+                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                    </thead>
+                    <tbody id="point-body"></tbody>
+                    <tfoot>
+                        <tr class="chip-row">
+                            <td>チップ</td>
+                            <td><input type="number" id="chip1" value="0"></td>
+                            <td><input type="number" id="chip2" value="0"></td>
+                            <td><input type="number" id="chip3" value="0"></td>
+                            <td><input type="number" id="chip4" value="0"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>合計pt</td><td id="total-pt1">0</td><td id="total-pt2">0</td><td id="total-pt3">0</td><td id="total-pt4">0</td>
+                        </tr>
+                        <tr class="money-row">
+                            <td>円精算</td><td id="money1">¥0</td><td id="money2">¥0</td><td id="money3">¥0</td><td id="money4">¥0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <section class="card rank-section">
+            <h2>順位表・統計</h2>
+            <div class="table-wrapper">
+                <table id="rank-table">
+                    <thead>
+                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                    </thead>
+                    <tbody id="rank-body"></tbody>
+                    <tfoot>
+                        <tr class="avg-rank-row">
+                            <td>平均順位</td><td id="avg-rank1">-</td><td id="avg-rank2">-</td><td id="avg-rank3">-</td><td id="avg-rank4">-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </section>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
+
+#### 2. style.css
+```css
+body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+.container { max-width: 1000px; margin: 0 auto; }
+h1 { text-align: center; color: #064e3b; }
+.card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+h2 { font-size: 1.2em; border-left: 5px solid #10b981; padding-left: 10px; margin-bottom: 15px; }
+
+.settings-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+.names, .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; }
+label { font-size: 0.8em; font-weight: bold; }
+input { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+th { background: #f8f9fa; }
+
+/* 各セクションの色分け */
+.score-section table thead th { background: #d1fae5; } /* 緑 */
+.point-section table thead th { background: #dbeafe; } /* 青 */
+.rank-section table thead th { background: #fef3c7; } /* 黄 */
+
+.calc-btn { width: 100%; padding: 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
+.calc-btn:hover { background: #059669; }
+
+.total-row { font-weight: bold; background: #f3f4f6; }
+.money-row { font-weight: bold; color: #059669; font-size: 1.1em; }
+.chip-row input { width: 60px; text-align: center; }
+
+#### 3. script.js
+```javascript
+// 20回戦分の行を生成
+const scoreBody = document.getElementById('score-body');
+const pointBody = document.getElementById('point-body');
+const rankBody = document.getElementById('rank-body');
+
+for (let i = 1; i <= 20; i++) {
+    scoreBody.innerHTML += `<tr><td>${i}</td>` + 
+        `<td><input type="number" class="s-${i}-1" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-2" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-3" placeholder="0"></td>` +
+        `<td><input type="number" class="s-${i}-4" placeholder="0"></td></tr>`;
+    
+    pointBody.innerHTML += `<tr><td>${i}</td><td id="p-${i}-1">-</td><td id="p-${i}-2">-</td><td id="p-${i}-3">-</td><td id="p-${i}-4">-</td></tr>`;
+    rankBody.innerHTML += `<tr><td>${i}</td><td id="r-${i}-1">-</td><td id="r-${i}-2">-</td><td id="r-${i}-3">-</td><td id="r-${i}-4">-</td></tr>`;
+}
+
+// 名前同期
+const ids = ['p1-name', 'p2-name', 'p3-name', 'p4-name'];
+ids.forEach((id, idx) => {
+    document.getElementById(id).addEventListener('input', (e) => {
+        document.querySelectorAll(`.p${idx+1}-label`).forEach(el => el.innerText = e.target.value);
+    });
+});
+
+function calculateAll() {
+    const startPoint = parseInt(document.getElementById('start-point').value);
+    const returnPoint = parseInt(document.getElementById('return-point').value);
+    const uma = document.getElementById('uma').value.split(',').map(Number);
+    const rate = parseInt(document.getElementById('rate').value);
+    const chipRate = parseInt(document.getElementById('chip-rate').value);
+    const oka = (returnPoint - startPoint) * 4 / 1000;
+
+    let totals = [0, 0, 0, 0];
+    let rankSums = [0, 0, 0, 0];
+    let gamesPlayed = 0;
+
+    for (let i = 1; i <= 20; i++) {
+        let scores = [];
+        for (let j = 1; j <= 4; j++) {
+            let val = document.querySelector(`.s-${i}-${j}`).value;
+            if (val === "") scores.push(null);
+            else scores.push(parseInt(val));
+        }
+
+        // 4人分入力されている場合のみ計算
+        if (scores.every(s => s !== null)) {
+            gamesPlayed++;
+            // 順位判定
+            let sorted = scores.map((s, idx) => ({s, idx})).sort((a, b) => b.s - a.s);
+            let ranks = new Array(4);
+            sorted.forEach((item, rIdx) => {
+                ranks[item.idx] = rIdx + 1;
+                rankSums[item.idx] += (rIdx + 1);
+            });
+
+            // ポイント計算
+            scores.forEach((s, idx) => {
+                let p = (s - returnPoint) / 1000 + uma[ranks[idx] - 1];
+                if (ranks[idx] === 1) p += oka;
+                
+                document.getElementById(`p-${i}-${idx+1}`).innerText = p.toFixed(1);
+                document.getElementById(`r-${i}-${idx+1}`).innerText = ranks[idx];
+                totals[idx] += p;
+            });
+        }
+    }
+
+    // 集計表示
+    for (let j = 1; j <= 4; j++) {
+        let chip = parseInt(document.getElementById(`chip${j}`).value) || 0;
+        let finalPt = totals[j-1];
+        document.getElementById(`total-pt${j}`).innerText = finalPt.toFixed(1);
+        
+        let money = (finalPt * rate * 10) + (chip * chipRate);
+        document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
+        
+        if (gamesPlayed > 0) {
+            document.getElementById(`avg-rank${j}`).innerText = (rankSums[j-1] / gamesPlayed).toFixed(2);
+        }
+    }
+}
