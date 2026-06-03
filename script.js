@@ -1,6 +1,7 @@
 const maxGames = 20;
 const numPlayers = 6;
 let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
+let manualRows = new Array(maxGames + 1).fill(false); // 手入力モードの記憶
 
 window.onload = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -10,15 +11,18 @@ window.onload = () => {
     const pointBody = document.getElementById('point-body');
     
     for (let i = 1; i <= maxGames; i++) {
+        // 点数入力の行
         let scoreRow = `<tr><td>${i}</td>`;
         let pointRow = `<tr><td>${i}</td>`;
         for (let j = 1; j <= numPlayers; j++) {
             scoreRow += `<td><input type="number" class="s-${i}-${j}" oninput="updateSum(${i})"></td>`;
-            pointRow += `<td id="p-${i}-${j}">-</td>`;
+            // ポイント表は input に変更（通常はreadonlyで操作不可）
+            pointRow += `<td><input type="number" id="p-${i}-${j}" class="pt-input" step="0.1" readonly></td>`;
         }
         scoreRow += `<td id="sum-${i}" class="sum-cell">0</td>`;
-        // トビ賞選択プルダウン
-        scoreRow += `<td><select id="tobi-${i}"><option value="0">自動(トップ)</option></select></td></tr>`;
+        scoreRow += `<td><select id="tobi-${i}" class="tobi-select"><option value="0">自動</option></select></td>`;
+        scoreRow += `<td><button class="manual-btn" id="manual-btn-${i}" onclick="toggleManual(${i})">手入力</button></td></tr>`;
+        
         pointRow += `</tr>`;
         scoreBody.innerHTML += scoreRow;
         pointBody.innerHTML += pointRow;
@@ -39,12 +43,11 @@ function setupNameSync() {
     }
 }
 
-// トビ賞の選択肢に最新の名前を反映する
 function updateTobiOptions() {
     for (let i = 1; i <= maxGames; i++) {
         let select = document.getElementById(`tobi-${i}`);
         let currentVal = select.value;
-        select.innerHTML = `<option value="0">自動(トップ)</option>`;
+        select.innerHTML = `<option value="0">自動</option>`;
         for (let j = 1; j <= numPlayers; j++) {
             let name = document.getElementById(`p${j}-name`).value;
             if (name) {
@@ -74,6 +77,33 @@ function updateSum(rowIdx) {
     }
 }
 
+// 手入力モードの切り替え
+function toggleManual(rowIdx) {
+    manualRows[rowIdx] = !manualRows[rowIdx];
+    const btn = document.getElementById(`manual-btn-${rowIdx}`);
+    
+    if (manualRows[rowIdx]) {
+        btn.classList.add('active');
+        btn.innerText = '手入力中';
+        // ポイント枠を編集可能にする
+        for (let j = 1; j <= numPlayers; j++) {
+            let pInput = document.getElementById(`p-${rowIdx}-${j}`);
+            pInput.removeAttribute('readonly');
+            pInput.classList.add('manual-mode');
+        }
+    } else {
+        btn.classList.remove('active');
+        btn.innerText = '手入力';
+        // 編集不可に戻す
+        for (let j = 1; j <= numPlayers; j++) {
+            let pInput = document.getElementById(`p-${rowIdx}-${j}`);
+            pInput.setAttribute('readonly', true);
+            pInput.classList.remove('manual-mode');
+        }
+        calculateAll(); // 元の自動計算に戻す
+    }
+}
+
 function calculateAll() {
     const start = parseInt(document.getElementById('start-point').value);
     const ret = parseInt(document.getElementById('return-point').value);
@@ -85,49 +115,55 @@ function calculateAll() {
     let totals = Array(numPlayers).fill(0);
 
     for (let i = 1; i <= maxGames; i++) {
-        let activePlayers = [];
-        for (let j = 1; j <= numPlayers; j++) {
-            let val = document.querySelector(`.s-${i}-${j}`).value;
-            if (val !== "") {
-                activePlayers.push({ index: j, score: parseInt(val) });
-            }
-            document.getElementById(`p-${i}-${j}`).innerText = "-";
-        }
-
-        if (activePlayers.length === 4) {
-            activePlayers.sort((a, b) => b.score - a.score);
-            
-            let tobiCount = 0;
-            activePlayers.forEach((p, rankIdx) => {
-                let pt = (p.score - ret) / 1000 + uma[rankIdx];
-                if (rankIdx === 0) pt += oka; 
-                
-                // 持ち点がマイナスなら -10pt
-                if (p.score < 0) {
-                    pt -= 10;
-                    tobiCount++;
-                }
-                p.pt = pt;
-            });
-
-            // トビ賞を加算する処理
-            if (tobiCount > 0) {
-                let manualWinnerIdx = parseInt(document.getElementById(`tobi-${i}`).value);
-                let winner = activePlayers.find(p => p.index === manualWinnerIdx);
-                
-                if (manualWinnerIdx > 0 && winner) {
-                    // 手動で選ばれた人に加算
-                    winner.pt += (10 * tobiCount);
-                } else {
-                    // 「自動」のまま、または休みの人が選ばれていた場合はトップに加算
-                    activePlayers[0].pt += (10 * tobiCount);
+        if (manualRows[i]) {
+            // 【手入力モード】: ポイント表に入力された数値をそのまま読み取って合計に足す
+            for (let j = 1; j <= numPlayers; j++) {
+                let pVal = document.getElementById(`p-${i}-${j}`).value;
+                if (pVal !== "") {
+                    totals[j - 1] += parseFloat(pVal);
                 }
             }
+        } else {
+            // 【自動計算モード】: 今まで通り点数から計算する
+            let activePlayers = [];
+            for (let j = 1; j <= numPlayers; j++) {
+                let val = document.querySelector(`.s-${i}-${j}`).value;
+                if (val !== "") {
+                    activePlayers.push({ index: j, score: parseInt(val) });
+                }
+                document.getElementById(`p-${i}-${j}`).value = ""; // 一旦リセット
+            }
 
-            activePlayers.forEach(p => {
-                document.getElementById(`p-${i}-${p.index}`).innerText = p.pt.toFixed(1);
-                totals[p.index - 1] += p.pt;
-            });
+            if (activePlayers.length === 4) {
+                activePlayers.sort((a, b) => b.score - a.score);
+                
+                let tobiCount = 0;
+                activePlayers.forEach((p, rankIdx) => {
+                    let pt = (p.score - ret) / 1000 + uma[rankIdx];
+                    if (rankIdx === 0) pt += oka; 
+                    if (p.score < 0) {
+                        pt -= 10;
+                        tobiCount++;
+                    }
+                    p.pt = pt;
+                });
+
+                if (tobiCount > 0) {
+                    let manualWinnerIdx = parseInt(document.getElementById(`tobi-${i}`).value);
+                    let winner = activePlayers.find(p => p.index === manualWinnerIdx);
+                    
+                    if (manualWinnerIdx > 0 && winner) {
+                        winner.pt += (10 * tobiCount);
+                    } else {
+                        activePlayers[0].pt += (10 * tobiCount);
+                    }
+                }
+
+                activePlayers.forEach(p => {
+                    document.getElementById(`p-${i}-${p.index}`).value = p.pt.toFixed(1);
+                    totals[p.index - 1] += p.pt;
+                });
+            }
         }
     }
 
@@ -142,7 +178,7 @@ function calculateAll() {
         document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
     }
     
-    return { totals, moneys }; // 保存用に返す
+    return { totals, moneys };
 }
 
 function saveCurrentData() {
@@ -150,7 +186,11 @@ function saveCurrentData() {
     const date = document.getElementById('game-date').value;
     if (!date) return;
 
-    let dayData = { names: [], scores: [], chips: [], tobiWinners: [], totals: calcResult.totals, moneys: calcResult.moneys };
+    let dayData = { 
+        names: [], scores: [], chips: [], tobiWinners: [], 
+        totals: calcResult.totals, moneys: calcResult.moneys,
+        manualRows: [...manualRows], points: []
+    };
 
     for (let j = 1; j <= numPlayers; j++) {
         dayData.names.push(document.getElementById(`p${j}-name`).value);
@@ -159,10 +199,13 @@ function saveCurrentData() {
 
     for (let i = 1; i <= maxGames; i++) {
         let rowScore = [];
+        let rowPoint = [];
         for (let j = 1; j <= numPlayers; j++) {
             rowScore.push(document.querySelector(`.s-${i}-${j}`).value);
+            rowPoint.push(document.getElementById(`p-${i}-${j}`).value); // 手入力ポイントも保存
         }
         dayData.scores.push(rowScore);
+        dayData.points.push(rowPoint);
         dayData.tobiWinners.push(document.getElementById(`tobi-${i}`).value);
     }
 
@@ -176,13 +219,24 @@ function loadDateData() {
     const date = document.getElementById('game-date').value;
     const data = db[date];
 
-    // 一旦クリア
+    // 一旦全クリア
     for (let i = 1; i <= maxGames; i++) {
         for (let j = 1; j <= numPlayers; j++) {
             document.querySelector(`.s-${i}-${j}`).value = "";
-            document.getElementById(`p-${i}-${j}`).innerText = "-";
+            document.getElementById(`p-${i}-${j}`).value = "";
         }
         document.getElementById(`tobi-${i}`).value = "0";
+        
+        // 手入力状態のリセット
+        manualRows[i] = false;
+        let btn = document.getElementById(`manual-btn-${i}`);
+        btn.classList.remove('active');
+        btn.innerText = '手入力';
+        for (let j = 1; j <= numPlayers; j++) {
+            let pInput = document.getElementById(`p-${i}-${j}`);
+            pInput.setAttribute('readonly', true);
+            pInput.classList.remove('manual-mode');
+        }
         updateSum(i);
     }
     for (let j = 1; j <= numPlayers; j++) document.getElementById(`chip${j}`).value = "0";
@@ -193,11 +247,29 @@ function loadDateData() {
             document.getElementById(`p${j}-name`).dispatchEvent(new Event('input')); 
             document.getElementById(`chip${j}`).value = data.chips[j-1];
         }
+        
+        manualRows = data.manualRows || new Array(maxGames + 1).fill(false);
+        
         for (let i = 1; i <= maxGames; i++) {
             for (let j = 1; j <= numPlayers; j++) {
                 document.querySelector(`.s-${i}-${j}`).value = data.scores[i-1][j-1];
             }
             if(data.tobiWinners) document.getElementById(`tobi-${i}`).value = data.tobiWinners[i-1];
+            
+            // 手入力モードの復元
+            if (manualRows[i]) {
+                let btn = document.getElementById(`manual-btn-${i}`);
+                btn.classList.add('active');
+                btn.innerText = '手入力中';
+                for (let j = 1; j <= numPlayers; j++) {
+                    let pInput = document.getElementById(`p-${i}-${j}`);
+                    pInput.removeAttribute('readonly');
+                    pInput.classList.add('manual-mode');
+                    if (data.points && data.points[i-1]) {
+                        pInput.value = data.points[i-1][j-1];
+                    }
+                }
+            }
             updateSum(i);
         }
     }
