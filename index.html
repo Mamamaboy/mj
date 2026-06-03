@@ -3,18 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理システム V3.2</title>
-    <link rel="stylesheet" href="style.css">
+    <title>麻雀成績管理システム V4 (グラフ搭載)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #064e3b; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.2em; border-left: 5px solid #10b981; padding-left: 10px; margin-bottom: 15px; }
+
+        .date-selector { display: flex; justify-content: center; align-items: center; gap: 15px; font-weight: bold; background: #ecfdf5; border: 2px solid #10b981; flex-wrap: wrap; }
+        .date-selector input { padding: 8px; font-size: 1.1em; }
+        .save-btn { padding: 8px 15px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .save-note { font-size: 0.8em; color: #d97706; }
+
+        .settings-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+        .names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 2; min-width: 300px; }
+        .rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; flex: 1; min-width: 200px; }
+        label { font-size: 0.8em; font-weight: bold; }
+        input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        /* iPad等でスワイプできるように横幅を確保 */
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 1050px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #f8f9fa; white-space: nowrap; }
+
+        .score-section table thead th { background: #d1fae5; }
+        .point-section table thead th { background: #dbeafe; }
+        .rank-section table thead th { background: #fef3c7; }
+
+        .sum-cell { font-weight: bold; color: #6b7280; background: #f3f4f6; }
+        .sum-ok { color: #10b981; }
+        .sum-err { color: #ef4444; }
+
+        .calc-btn { width: 100%; padding: 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: 0.2s; }
+        .calc-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        .total-row { font-weight: bold; background: #f3f4f6; }
+        .money-row { font-weight: bold; color: #059669; font-size: 1.1em; }
+
+        .tobi-select { width: 90px; padding: 4px; font-size: 0.9em; }
+        .manual-btn { padding: 5px 8px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
+        .manual-btn.active { background: #f59e0b; }
+
+        .pt-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 1em; color: inherit; pointer-events: none; }
+        .pt-input.manual-mode { pointer-events: auto; border: 2px solid #f59e0b; background: #fffbeb; border-radius: 4px; padding: 4px; color: #b45309; font-weight: bold; }
+        .pt-input::-webkit-outer-spin-button, .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* グラフ用のエリア */
+        .chart-container { position: relative; height: 350px; width: 100%; margin-top: 10px; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>🀄 麻雀成績管理 V3.2</h1>
+        <h1>🀄 麻雀成績管理 V4</h1>
 
         <div class="date-selector card">
             <label for="game-date">📅 記録日を選択: </label>
             <input type="date" id="game-date">
             <button onclick="saveCurrentData()" class="save-btn">この日のデータを保存</button>
-            <span class="save-note">※保存すると下の「通算成績」に反映されます</span>
+            <span class="save-note">※保存すると通算成績に反映されます</span>
         </div>
 
         <section class="card setting-section">
@@ -38,6 +88,8 @@
             </div>
         </section>
 
+        <p style="text-align: right; font-size: 0.8em; color: #666; margin: 0 0 5px 0;">※表は横にスクロールできます 👉</p>
+
         <section class="card score-section">
             <h2>点数入力（休みの人は空欄）</h2>
             <div class="table-wrapper">
@@ -49,7 +101,7 @@
                             <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
                             <th>合計</th>
                             <th>トビ賞</th>
-                            <th>修正</th>
+                            <th>手入力</th>
                         </tr>
                     </thead>
                     <tbody id="score-body"></tbody>
@@ -57,10 +109,10 @@
             </div>
         </section>
 
-        <button class="calc-btn" onclick="calculateAll()">計算して画面に反映</button>
+        <button class="calc-btn" onclick="calculateAll()">計算して画面とグラフに反映</button>
 
         <section class="card point-section">
-            <h2>当日のポイント結果 (手入力ボタンで直接編集可能)</h2>
+            <h2>当日のポイント結果 (手入力ボタンで黄色い枠を直接編集)</h2>
             <div class="table-wrapper">
                 <table id="point-table">
                     <thead>
@@ -92,6 +144,13 @@
             </div>
         </section>
 
+        <section class="card chart-section">
+            <h2>📈 当日のポイント推移</h2>
+            <div class="chart-container">
+                <canvas id="pointChart"></canvas>
+            </div>
+        </section>
+
         <section class="card rank-section">
             <h2>🏆 通算成績（全日程の合計）</h2>
             <div class="table-wrapper">
@@ -99,12 +158,93 @@
                     <thead>
                         <tr><th>名前</th><th>プレイ数</th><th>通算Pt</th><th>通算収支(目安)</th></tr>
                     </thead>
-                    <tbody id="cumulative-body">
-                        </tbody>
+                    <tbody id="cumulative-body"></tbody>
                 </table>
             </div>
         </section>
     </div>
-    <script src="script.js"></script>
-</body>
-</html>
+
+    <script>
+        const maxGames = 20;
+        const numPlayers = 6;
+        let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
+        let manualRows = new Array(maxGames + 1).fill(false);
+        let pointChart; // グラフの本体
+
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('game-date').value = today;
+            
+            const scoreBody = document.getElementById('score-body');
+            const pointBody = document.getElementById('point-body');
+            
+            for (let i = 1; i <= maxGames; i++) {
+                let scoreRow = `<tr><td>${i}</td>`;
+                let pointRow = `<tr><td>${i}</td>`;
+                for (let j = 1; j <= numPlayers; j++) {
+                    scoreRow += `<td><input type="number" class="s-${i}-${j}" oninput="updateSum(${i})"></td>`;
+                    pointRow += `<td><input type="number" id="p-${i}-${j}" class="pt-input" step="0.1" readonly></td>`;
+                }
+                scoreRow += `<td id="sum-${i}" class="sum-cell">0</td>`;
+                scoreRow += `<td><select id="tobi-${i}" class="tobi-select"><option value="0">自動</option></select></td>`;
+                scoreRow += `<td><button class="manual-btn" id="manual-btn-${i}" onclick="toggleManual(${i})">手入力</button></td></tr>`;
+                
+                pointRow += `</tr>`;
+                scoreBody.innerHTML += scoreRow;
+                pointBody.innerHTML += pointRow;
+            }
+            
+            initChart(); // グラフの初期化
+
+            document.getElementById('game-date').addEventListener('change', loadDateData);
+            setupNameSync();
+            updateTobiOptions();
+            loadDateData();
+        };
+
+        // グラフの設定
+        function initChart() {
+            const ctx = document.getElementById('pointChart').getContext('2d');
+            const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa', '#f472b6']; // 6人分の線の色
+            
+            let datasets = [];
+            for(let i=0; i<numPlayers; i++) {
+                datasets.push({
+                    label: `P${i+1}`,
+                    data: [0],
+                    borderColor: colors[i],
+                    backgroundColor: colors[i],
+                    tension: 0.1, // 直線にするか曲線にするか(0で完全な直線)
+                    fill: false
+                });
+            }
+
+            pointChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['開始'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { title: { display: true, text: '累計ポイント' } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function setupNameSync() {
+            for (let i = 1; i <= numPlayers; i++) {
+                document.getElementById(`p${i}-name`).addEventListener('input', (e) => {
+                    document.querySelectorAll(`.p${i}-label`).forEach(el => el.innerText = e.target.value);
+                    updateTobiOptions();
+                });
+            }
+        }
+
+        function updateTobiOptions() {
