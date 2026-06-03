@@ -3,52 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理システム - 一括入力版</title>
+    <title>麻雀成績管理システム V3</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🀄 麻雀成績管理（一括入力）</h1>
+        <h1>🀄 麻雀成績管理 V3</h1>
+
+        <div class="date-selector card">
+            <label for="game-date">📅 記録日を選択: </label>
+            <input type="date" id="game-date">
+            <button onclick="saveCurrentData()" class="save-btn">この日のデータを保存</button>
+        </div>
 
         <section class="card setting-section">
-            <h2>基本設定</h2>
+            <h2>基本設定 & メンバー（最大6名）</h2>
             <div class="settings-grid">
                 <div class="names">
                     <label>P1: <input type="text" id="p1-name" value="Aさん"></label>
                     <label>P2: <input type="text" id="p2-name" value="Bさん"></label>
                     <label>P3: <input type="text" id="p3-name" value="Cさん"></label>
                     <label>P4: <input type="text" id="p4-name" value="Dさん"></label>
+                    <label>P5: <input type="text" id="p5-name" value="Eさん"></label>
+                    <label>P6: <input type="text" id="p6-name" value="Fさん"></label>
                 </div>
                 <div class="rules">
                     <label>配点: <input type="number" id="start-point" value="25000"></label>
                     <label>返し: <input type="number" id="return-point" value="30000"></label>
-                    <label>ウマ(1-4位): <input type="text" id="uma" value="10,5,-5,-10"></label>
-                    <label>レート(1pt=○円): <input type="number" id="rate" value="50"></label>
-                    <label>チップ(1枚=○円): <input type="number" id="chip-rate" value="500"></label>
+                    <label>ウマ: <input type="text" id="uma" value="10,5,-5,-10"></label>
+                    <label>レート: <input type="number" id="rate" value="50"></label>
+                    <label>チップ: <input type="number" id="chip-rate" value="500"></label>
                 </div>
             </div>
         </section>
 
         <section class="card score-section">
-            <h2>点数入力（1〜20回戦）</h2>
+            <h2>点数入力（休みの人は空欄）</h2>
             <div class="table-wrapper">
                 <table id="score-table">
                     <thead>
-                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th><th>合計</th></tr>
                     </thead>
                     <tbody id="score-body"></tbody>
                 </table>
             </div>
         </section>
 
-        <button class="calc-btn" onclick="calculateAll()">全計算を実行する</button>
+        <button class="calc-btn" onclick="calculateAll()">計算して画面に反映</button>
 
         <section class="card point-section">
-            <h2>ポイント計算結果（ウマ・オカ・チップ込）</h2>
+            <h2>当日のポイント結果 (トビ賞含む)</h2>
             <div class="table-wrapper">
                 <table id="point-table">
                     <thead>
-                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th></tr>
                     </thead>
                     <tbody id="point-body"></tbody>
                     <tfoot>
@@ -58,12 +66,14 @@
                             <td><input type="number" id="chip2" value="0"></td>
                             <td><input type="number" id="chip3" value="0"></td>
                             <td><input type="number" id="chip4" value="0"></td>
+                            <td><input type="number" id="chip5" value="0"></td>
+                            <td><input type="number" id="chip6" value="0"></td>
                         </tr>
                         <tr class="total-row">
-                            <td>合計pt</td><td id="total-pt1">0</td><td id="total-pt2">0</td><td id="total-pt3">0</td><td id="total-pt4">0</td>
+                            <td>当日Pt</td><td id="total-pt1">0</td><td id="total-pt2">0</td><td id="total-pt3">0</td><td id="total-pt4">0</td><td id="total-pt5">0</td><td id="total-pt6">0</td>
                         </tr>
                         <tr class="money-row">
-                            <td>円精算</td><td id="money1">¥0</td><td id="money2">¥0</td><td id="money3">¥0</td><td id="money4">¥0</td>
+                            <td>当日収支</td><td id="money1">¥0</td><td id="money2">¥0</td><td id="money3">¥0</td><td id="money4">¥0</td><td id="money5">¥0</td><td id="money6">¥0</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -71,18 +81,14 @@
         </section>
 
         <section class="card rank-section">
-            <h2>順位表・統計</h2>
+            <h2>🏆 通算成績（全日程の合計）</h2>
             <div class="table-wrapper">
-                <table id="rank-table">
+                <table id="cumulative-table">
                     <thead>
-                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th></tr>
+                        <tr><th>名前</th><th>プレイ数</th><th>通算Pt</th><th>通算収支(目安)</th></tr>
                     </thead>
-                    <tbody id="rank-body"></tbody>
-                    <tfoot>
-                        <tr class="avg-rank-row">
-                            <td>平均順位</td><td id="avg-rank1">-</td><td id="avg-rank2">-</td><td id="avg-rank3">-</td><td id="avg-rank4">-</td>
-                        </tr>
-                    </tfoot>
+                    <tbody id="cumulative-body">
+                        </tbody>
                 </table>
             </div>
         </section>
