@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理システム V3.1</title>
+    <title>麻雀成績管理システム V3.2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🀄 麻雀成績管理 V3.1</h1>
+        <h1>🀄 麻雀成績管理 V3.2</h1>
 
         <div class="date-selector card">
             <label for="game-date">📅 記録日を選択: </label>
@@ -43,7 +43,14 @@
             <div class="table-wrapper">
                 <table id="score-table">
                     <thead>
-                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th><th>合計</th><th>飛ばした人(トビ賞)</th></tr>
+                        <tr>
+                            <th>回</th>
+                            <th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th>
+                            <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
+                            <th>合計</th>
+                            <th>トビ賞</th>
+                            <th>修正</th>
+                        </tr>
                     </thead>
                     <tbody id="score-body"></tbody>
                 </table>
@@ -53,11 +60,15 @@
         <button class="calc-btn" onclick="calculateAll()">計算して画面に反映</button>
 
         <section class="card point-section">
-            <h2>当日のポイント結果</h2>
+            <h2>当日のポイント結果 (手入力ボタンで直接編集可能)</h2>
             <div class="table-wrapper">
                 <table id="point-table">
                     <thead>
-                        <tr><th>回</th><th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th><th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th></tr>
+                        <tr>
+                            <th>回</th>
+                            <th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th>
+                            <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
+                        </tr>
                     </thead>
                     <tbody id="point-body"></tbody>
                     <tfoot>
