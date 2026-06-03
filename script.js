@@ -2,7 +2,6 @@ const maxGames = 20;
 const numPlayers = 6;
 let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
 
-// 初期化（テーブル生成と日付セット）
 window.onload = () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('game-date').value = today;
@@ -17,7 +16,9 @@ window.onload = () => {
             scoreRow += `<td><input type="number" class="s-${i}-${j}" oninput="updateSum(${i})"></td>`;
             pointRow += `<td id="p-${i}-${j}">-</td>`;
         }
-        scoreRow += `<td id="sum-${i}" class="sum-cell">0</td></tr>`;
+        scoreRow += `<td id="sum-${i}" class="sum-cell">0</td>`;
+        // トビ賞選択プルダウン
+        scoreRow += `<td><select id="tobi-${i}"><option value="0">自動(トップ)</option></select></td></tr>`;
         pointRow += `</tr>`;
         scoreBody.innerHTML += scoreRow;
         pointBody.innerHTML += pointRow;
@@ -25,20 +26,35 @@ window.onload = () => {
     
     document.getElementById('game-date').addEventListener('change', loadDateData);
     setupNameSync();
+    updateTobiOptions();
     loadDateData();
-    updateCumulativeStats();
 };
 
-// 名前の連動
 function setupNameSync() {
     for (let i = 1; i <= numPlayers; i++) {
         document.getElementById(`p${i}-name`).addEventListener('input', (e) => {
             document.querySelectorAll(`.p${i}-label`).forEach(el => el.innerText = e.target.value);
+            updateTobiOptions();
         });
     }
 }
 
-// 行の合計をリアルタイム計算 (⑤の機能)
+// トビ賞の選択肢に最新の名前を反映する
+function updateTobiOptions() {
+    for (let i = 1; i <= maxGames; i++) {
+        let select = document.getElementById(`tobi-${i}`);
+        let currentVal = select.value;
+        select.innerHTML = `<option value="0">自動(トップ)</option>`;
+        for (let j = 1; j <= numPlayers; j++) {
+            let name = document.getElementById(`p${j}-name`).value;
+            if (name) {
+                select.innerHTML += `<option value="${j}">${name}</option>`;
+            }
+        }
+        select.value = currentVal;
+    }
+}
+
 function updateSum(rowIdx) {
     let sum = 0;
     for (let j = 1; j <= numPlayers; j++) {
@@ -58,7 +74,6 @@ function updateSum(rowIdx) {
     }
 }
 
-// 当日の計算を実行
 function calculateAll() {
     const start = parseInt(document.getElementById('start-point').value);
     const ret = parseInt(document.getElementById('return-point').value);
@@ -70,38 +85,45 @@ function calculateAll() {
     let totals = Array(numPlayers).fill(0);
 
     for (let i = 1; i <= maxGames; i++) {
-        let activePlayers = []; // その半荘に参加している人
+        let activePlayers = [];
         for (let j = 1; j <= numPlayers; j++) {
             let val = document.querySelector(`.s-${i}-${j}`).value;
             if (val !== "") {
                 activePlayers.push({ index: j, score: parseInt(val) });
             }
-            document.getElementById(`p-${i}-${j}`).innerText = "-"; // 一旦リセット
+            document.getElementById(`p-${i}-${j}`).innerText = "-";
         }
 
-        // 4人入力されている場合のみ計算
         if (activePlayers.length === 4) {
-            // 順位ソート
             activePlayers.sort((a, b) => b.score - a.score);
             
-            let tobiBonus = 0; // トビでもらえるポイント
-
+            let tobiCount = 0;
             activePlayers.forEach((p, rankIdx) => {
                 let pt = (p.score - ret) / 1000 + uma[rankIdx];
-                if (rankIdx === 0) pt += oka; // トップにオカ
+                if (rankIdx === 0) pt += oka; 
                 
-                // トビ判定 (④の機能)
+                // 持ち点がマイナスなら -10pt
                 if (p.score < 0) {
                     pt -= 10;
-                    tobiBonus += 10;
+                    tobiCount++;
                 }
                 p.pt = pt;
             });
 
-            // トップにトビ賞を加算
-            activePlayers[0].pt += tobiBonus;
+            // トビ賞を加算する処理
+            if (tobiCount > 0) {
+                let manualWinnerIdx = parseInt(document.getElementById(`tobi-${i}`).value);
+                let winner = activePlayers.find(p => p.index === manualWinnerIdx);
+                
+                if (manualWinnerIdx > 0 && winner) {
+                    // 手動で選ばれた人に加算
+                    winner.pt += (10 * tobiCount);
+                } else {
+                    // 「自動」のまま、または休みの人が選ばれていた場合はトップに加算
+                    activePlayers[0].pt += (10 * tobiCount);
+                }
+            }
 
-            // 画面に反映して合計に加算
             activePlayers.forEach(p => {
                 document.getElementById(`p-${i}-${p.index}`).innerText = p.pt.toFixed(1);
                 totals[p.index - 1] += p.pt;
@@ -109,26 +131,26 @@ function calculateAll() {
         }
     }
 
-    // 当日合計と金額の計算
+    let moneys = [];
     for (let j = 1; j <= numPlayers; j++) {
         let chip = parseInt(document.getElementById(`chip${j}`).value) || 0;
         let finalPt = totals[j - 1];
         document.getElementById(`total-pt${j}`).innerText = finalPt.toFixed(1);
         
         let money = (finalPt * rate * 10) + (chip * chipRate);
+        moneys.push(money);
         document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
     }
+    
+    return { totals, moneys }; // 保存用に返す
 }
 
-// データの保存 (①の機能)
 function saveCurrentData() {
-    calculateAll(); // 保存前に一応計算
+    let calcResult = calculateAll();
     const date = document.getElementById('game-date').value;
     if (!date) return;
 
-    let dayData = {
-        names: [], scores: [], chips: []
-    };
+    let dayData = { names: [], scores: [], chips: [], tobiWinners: [], totals: calcResult.totals, moneys: calcResult.moneys };
 
     for (let j = 1; j <= numPlayers; j++) {
         dayData.names.push(document.getElementById(`p${j}-name`).value);
@@ -141,15 +163,15 @@ function saveCurrentData() {
             rowScore.push(document.querySelector(`.s-${i}-${j}`).value);
         }
         dayData.scores.push(rowScore);
+        dayData.tobiWinners.push(document.getElementById(`tobi-${i}`).value);
     }
 
     db[date] = dayData;
     localStorage.setItem('mahjongDB', JSON.stringify(db));
-    alert(`${date} のデータをブラウザに保存しました！`);
+    alert(`${date} のデータを保存し、通算成績を更新しました！`);
     updateCumulativeStats();
 }
 
-// データの読み込み
 function loadDateData() {
     const date = document.getElementById('game-date').value;
     const data = db[date];
@@ -160,15 +182,14 @@ function loadDateData() {
             document.querySelector(`.s-${i}-${j}`).value = "";
             document.getElementById(`p-${i}-${j}`).innerText = "-";
         }
+        document.getElementById(`tobi-${i}`).value = "0";
         updateSum(i);
     }
     for (let j = 1; j <= numPlayers; j++) document.getElementById(`chip${j}`).value = "0";
 
     if (data) {
-        // データがあれば復元
         for (let j = 1; j <= numPlayers; j++) {
             document.getElementById(`p${j}-name`).value = data.names[j-1];
-            // イベントを発火させて見出しも更新
             document.getElementById(`p${j}-name`).dispatchEvent(new Event('input')); 
             document.getElementById(`chip${j}`).value = data.chips[j-1];
         }
@@ -176,31 +197,53 @@ function loadDateData() {
             for (let j = 1; j <= numPlayers; j++) {
                 document.querySelector(`.s-${i}-${j}`).value = data.scores[i-1][j-1];
             }
+            if(data.tobiWinners) document.getElementById(`tobi-${i}`).value = data.tobiWinners[i-1];
             updateSum(i);
         }
     }
     calculateAll();
+    updateCumulativeStats();
 }
 
-// 通算成績の計算 (③の機能)
 function updateCumulativeStats() {
-    let stats = {};
-    const rate = parseInt(document.getElementById('rate').value) || 50;
-    const chipRate = parseInt(document.getElementById('chip-rate').value) || 500;
+    let allStats = {};
 
-    // 全日付のデータを走査
     for (const date in db) {
-        const data = db[date];
-        // 簡易的にその日の合計ptを計算（本来は再計算ロジックが必要ですが、ここでは表示されている最終Ptを推定します）
-        // ※正確に通算するため、本来は保存時に計算済みのPtも保存するか、ここで全ゲーム再計算します。
-        // 今回はシンプルに、各プレイヤーがその日に参加したゲーム数をカウントし、ざっくりと合算します。
+        let d = db[date];
+        if (!d.totals) continue; 
+        
+        for (let j = 0; j < numPlayers; j++) {
+            let name = d.names[j];
+            if (!name || name.trim() === "") continue;
+            if (!allStats[name]) allStats[name] = { games: 0, pt: 0, money: 0 };
+            
+            let games = 0;
+            d.scores.forEach(row => {
+                if (row[j] !== "") games++;
+            });
+            
+            allStats[name].games += games;
+            allStats[name].pt += (d.totals[j] || 0);
+            allStats[name].money += (d.moneys[j] || 0);
+        }
     }
 
-    // ----------------------------------------------------
-    // 【重要】通算成績の正確な集計のためには、
-    // 日付ごとの確定ポイントも保存する仕組みが必要です。
-    // 今回は枠組みだけ作成し、詳細はご相談させてください。
-    // ----------------------------------------------------
     const tbody = document.getElementById('cumulative-body');
-    tbody.innerHTML = `<tr><td colspan="4">※データを保存するとここに通算成績が表示されます</td></tr>`;
+    tbody.innerHTML = "";
+    let hasData = false;
+    for (const name in allStats) {
+        let st = allStats[name];
+        if (st.games > 0) {
+            hasData = true;
+            tbody.innerHTML += `<tr>
+                <td><strong>${name}</strong></td>
+                <td>${st.games} 半荘</td>
+                <td>${st.pt.toFixed(1)}</td>
+                <td style="color:#059669; font-weight:bold;">¥${Math.round(st.money).toLocaleString()}</td>
+            </tr>`;
+        }
+    }
+    if (!hasData) {
+        tbody.innerHTML = `<tr><td colspan="4">※「この日のデータを保存」ボタンを押すと通算成績が表示されます</td></tr>`;
+    }
 }
