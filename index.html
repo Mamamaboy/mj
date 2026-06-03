@@ -3,93 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理システム V3.3 - M.LEAGUEデザイン</title>
+    <title>麻雀成績管理システム V6</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* 基本設定：白基調 */
-        body { font-family: sans-serif; background: #ffffff; margin: 0; padding: 20px; color: #000000; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1200px; margin: 0 auto; }
-        
-        /* アプリケーションヘッダーとロゴ */
-        .app-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        .app-logo { height: 40px; margin-right: 15px; }
-        h1 { text-align: center; color: #000000; margin: 0; font-size: 1.8em; }
+        h1 { text-align: center; color: #064e3b; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.2em; border-left: 5px solid #10b981; padding-left: 10px; margin-bottom: 15px; }
 
-        /* カードデザイン：白、境界線グレー、影なし */
-        .card { background: #ffffff; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px; }
-        
-        /* セクションタイトル：サイドバー交互（緑・赤・緑・赤） */
-        h2 { font-size: 1.2em; border-left: 5px solid #000000; padding-left: 10px; margin-bottom: 15px; }
-        #setting-section h2 { border-left-color: #007a33; } /* 基本設定：緑 */
-        #score-section h2 { border-left-color: #e4002b; }   /* 点数入力：赤 */
-        #point-section h2 { border-left-color: #007a33; }   /* ポイント結果：緑 */
-        #rank-section h2 { border-left-color: #e4002b; }    /* 通算成績：赤 */
-
-        /* 日付セレクター：白、境界線グレー */
-        .date-selector { display: flex; align-items: center; gap: 10px; font-weight: bold; background: #ffffff; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; flex-wrap: wrap; flex: 1; }
-        .date-selector input { padding: 8px; font-size: 1.1em; }
-        
-        /* ボタンカラー：保存＝緑、計算＝赤 */
-        .save-btn { padding: 8px 15px; background: #007a33; color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .save-btn:hover { background: #006629; }
-        .calc-btn { width: 100%; padding: 15px; background: #e4002b; color: #ffffff; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(228, 0, 43, 0.3); transition: 0.2s; }
-        .calc-btn:active { transform: translateY(2px); box-shadow: none; }
-        .calc-btn:hover { background: #c30025; }
-
-        /* その他ボタン */
-        .reset-btn { padding: 8px 15px; background: #ef4444; color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .reset-btn:hover { background: #dc2626; }
-        .nav-btn { padding: 10px 20px; background: #3b82f6; color: #ffffff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: 0.2s; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .nav-btn { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: 0.2s; }
         .nav-btn:hover { background: #2563eb; }
         .nav-btn:active { transform: translateY(2px); box-shadow: none; }
-        .manual-btn { padding: 5px 8px; background: #6b7280; color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
-        .manual-btn.active { background: #f59e0b; }
 
-        /* 設定グリッド */
+        .date-selector { display: flex; align-items: center; gap: 10px; font-weight: bold; background: #ecfdf5; border: 2px solid #10b981; padding: 15px; border-radius: 8px; flex-wrap: wrap; flex: 1; }
+        .date-selector input { padding: 8px; font-size: 1.1em; }
+        .save-btn { padding: 8px 15px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        /* リセットボタンのデザイン */
+        .reset-btn { padding: 8px 15px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .reset-btn:hover { background: #dc2626; }
+
         .settings-grid { display: flex; gap: 20px; flex-wrap: wrap; }
         .names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 2; min-width: 300px; }
         .rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; flex: 1; min-width: 200px; }
         label { font-size: 0.8em; font-weight: bold; }
         input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 
-        /* テーブル基本：白ヘッダー、境界線グレー、スクロール */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 1050px; }
-        th, td { border: 1px solid #e0e0e0; padding: 8px; text-align: center; }
-        
-        /* ヘッダーデザイン：白背景、黒文字、太下線グレー */
-        table thead th { background: #ffffff; color: #000000; font-weight: bold; white-space: nowrap; border-bottom: 2px solid #e0e0e0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #f8f9fa; white-space: nowrap; }
 
-        /* セクション別ヘッダー色（削除して白統一） */
-        .score-section table thead th, .point-section table thead th, .rank-section table thead th { background: none; }
+        .score-section table thead th { background: #d1fae5; }
+        .point-section table thead th { background: #dbeafe; }
+        .rank-section table thead th { background: #fef3c7; }
 
-        /* 各種データ色同期（緑、赤、黒、グレー） */
-        .sum-cell { font-weight: bold; color: #666666; background: none; } /* 合計：グレー */
-        .sum-ok { color: #007a33; } /* 合計OK：緑 */
-        .sum-err { color: #e4002b; } /* 合計ERROR：赤 */
-        
-        .total-row { font-weight: bold; background: #f3f4f6; } /* 当日Pt：薄グレー */
-        .money-row { font-weight: bold; color: #007a33; font-size: 1.1em; } /* 当日収支：緑 */
-        
+        .sum-cell { font-weight: bold; color: #6b7280; background: #f3f4f6; }
+        .sum-ok { color: #10b981; }
+        .sum-err { color: #ef4444; }
+
+        .calc-btn { width: 100%; padding: 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: 0.2s; }
+        .calc-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        .total-row { font-weight: bold; background: #f3f4f6; }
+        .money-row { font-weight: bold; color: #059669; font-size: 1.1em; }
+
         .tobi-select { width: 90px; padding: 4px; font-size: 0.9em; }
-        .chip-row input { width: 60px; text-align: center; border: 1px solid #ddd; }
+        .manual-btn { padding: 5px 8px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
+        .manual-btn.active { background: #f59e0b; }
 
-        /* ポイント表の入力枠（手入力モード） */
         .pt-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 1em; color: inherit; pointer-events: none; }
-        .pt-input.manual-mode { pointer-events: auto; border: 2px solid #e4002b; background: #fffbeb; border-radius: 4px; padding: 4px; color: #b45309; font-weight: bold; }
+        .pt-input.manual-mode { pointer-events: auto; border: 2px solid #f59e0b; background: #fffbeb; border-radius: 4px; padding: 4px; color: #b45309; font-weight: bold; }
         .pt-input::-webkit-outer-spin-button, .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* その他：グラフ、画面切り替え */
         .chart-container { position: relative; height: 350px; width: 100%; margin-top: 10px; }
+        
         #cumulative-view { display: none; }
-        .save-note { font-size: 0.8em; color: #d97706; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="app-header">
-            <img src="image_5.png" alt="M.LEAGUEロゴ" class="app-logo">
-            <h1>麻雀成績管理 V3.2</h1>
-        </div>
+        <h1>🀄 麻雀成績管理 V6</h1>
 
         <div id="main-view">
             <div class="header-actions">
@@ -102,7 +78,7 @@
                 <button class="nav-btn" onclick="toggleView('cumulative')">🏆 通算成績・グラフを見る</button>
             </div>
 
-            <section id="setting-section" class="card setting-section">
+            <section class="card setting-section">
                 <h2>基本設定 & メンバー（最大6名）</h2>
                 <div class="settings-grid">
                     <div class="names">
@@ -125,7 +101,7 @@
 
             <p style="text-align: right; font-size: 0.8em; color: #666; margin: 0 0 5px 0;">※表は横にスクロールできます 👉</p>
 
-            <section id="score-section" class="card score-section">
+            <section class="card score-section">
                 <h2>点数入力（休みの人は空欄）</h2>
                 <div class="table-wrapper">
                     <table id="score-table">
@@ -134,8 +110,536 @@
                                 <th>回</th>
                                 <th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th>
                                 <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
-                                <th>合計```html
-    <div class="app-header">
-            <img src="image_5.png" alt="M.LEAGUEロゴ" class="app-logo">
-            <h1>麻雀成績管理 V3.2</h1>
+                                <th>合計</th>
+                                <th>トビ賞</th>
+                                <th>手入力</th>
+                            </tr>
+                        </thead>
+                        <tbody id="score-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <button class="calc-btn" onclick="calculateAll()">計算して画面とグラフに反映</button>
+
+            <section class="card point-section">
+                <h2>当日のポイント結果</h2>
+                <div class="table-wrapper">
+                    <table id="point-table">
+                        <thead>
+                            <tr>
+                                <th>回</th>
+                                <th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th>
+                                <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
+                            </tr>
+                        </thead>
+                        <tbody id="point-body"></tbody>
+                        <tfoot>
+                            <tr class="chip-row">
+                                <td>チップ</td>
+                                <td><input type="number" id="chip1" value="0"></td>
+                                <td><input type="number" id="chip2" value="0"></td>
+                                <td><input type="number" id="chip3" value="0"></td>
+                                <td><input type="number" id="chip4" value="0"></td>
+                                <td><input type="number" id="chip5" value="0"></td>
+                                <td><input type="number" id="chip6" value="0"></td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>当日Pt</td><td id="total-pt1">0</td><td id="total-pt2">0</td><td id="total-pt3">0</td><td id="total-pt4">0</td><td id="total-pt5">0</td><td id="total-pt6">0</td>
+                            </tr>
+                            <tr class="money-row">
+                                <td>当日収支</td><td id="money1">¥0</td><td id="money2">¥0</td><td id="money3">¥0</td><td id="money4">¥0</td><td id="money5">¥0</td><td id="money6">¥0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card chart-section">
+                <h2>📈 当日のポイント推移</h2>
+                <div class="chart-container">
+                    <canvas id="pointChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <div id="cumulative-view">
+            <div class="header-actions">
+                <button class="nav-btn" style="background:#6b7280;" onclick="toggleView('main')">◀ 戻る (当日の入力画面へ)</button>
+            </div>
+
+            <section class="card rank-section">
+                <h2>🏆 通算成績表</h2>
+                <div class="table-wrapper">
+                    <table id="cumulative-table" style="min-width: 600px;">
+                        <thead>
+                            <tr><th>名前</th><th>プレイ数</th><th>通算Pt</th><th>通算収支(目安)</th></tr>
+                        </thead>
+                        <tbody id="cumulative-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card chart-section">
+                <h2>📈 プレイヤー別 通算ポイント推移 (日付順)</h2>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="cumulativeChart"></canvas>
+                </div>
+            </section>
+        </div>
+
     </div>
+
+    <script>
+        const maxGames = 20;
+        const numPlayers = 6;
+        const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa', '#f472b6', '#ec4899', '#14b8a6', '#f97316'];
+        
+        let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
+        let manualRows = new Array(maxGames + 1).fill(false);
+        let pointChart;
+        let cumulativeChart;
+
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('game-date').value = today;
+            
+            const scoreBody = document.getElementById('score-body');
+            const pointBody = document.getElementById('point-body');
+            
+            for (let i = 1; i <= maxGames; i++) {
+                let scoreRow = `<tr><td>${i}</td>`;
+                let pointRow = `<tr><td>${i}</td>`;
+                for (let j = 1; j <= numPlayers; j++) {
+                    scoreRow += `<td><input type="number" class="s-${i}-${j}" oninput="updateSum(${i})"></td>`;
+                    pointRow += `<td><input type="number" id="p-${i}-${j}" class="pt-input" step="0.1" readonly></td>`;
+                }
+                scoreRow += `<td id="sum-${i}" class="sum-cell">0</td>`;
+                scoreRow += `<td><select id="tobi-${i}" class="tobi-select"><option value="0">自動</option></select></td>`;
+                scoreRow += `<td><button class="manual-btn" id="manual-btn-${i}" onclick="toggleManual(${i})">手入力</button></td></tr>`;
+                
+                pointRow += `</tr>`;
+                scoreBody.innerHTML += scoreRow;
+                pointBody.innerHTML += pointRow;
+            }
+            
+            initCharts();
+            document.getElementById('game-date').addEventListener('change', loadDateData);
+            setupNameSync();
+            updateTobiOptions();
+            loadDateData();
+        };
+
+        function toggleView(view) {
+            if (view === 'cumulative') {
+                document.getElementById('main-view').style.display = 'none';
+                document.getElementById('cumulative-view').style.display = 'block';
+                updateCumulativeStats();
+            } else {
+                document.getElementById('cumulative-view').style.display = 'none';
+                document.getElementById('main-view').style.display = 'block';
+            }
+        }
+
+        function initCharts() {
+            const ctx1 = document.getElementById('pointChart').getContext('2d');
+            pointChart = new Chart(ctx1, {
+                type: 'line',
+                data: { labels: ['開始'], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'ポイント' } } } }
+            });
+
+            const ctx2 = document.getElementById('cumulativeChart').getContext('2d');
+            cumulativeChart = new Chart(ctx2, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: '通算ポイント' } } } }
+            });
+        }
+
+        function setupNameSync() {
+            for (let i = 1; i <= numPlayers; i++) {
+                document.getElementById(`p${i}-name`).addEventListener('input', (e) => {
+                    document.querySelectorAll(`.p${i}-label`).forEach(el => el.innerText = e.target.value);
+                    updateTobiOptions();
+                });
+            }
+        }
+
+        function updateTobiOptions() {
+            for (let i = 1; i <= maxGames; i++) {
+                let select = document.getElementById(`tobi-${i}`);
+                let currentVal = select.value;
+                select.innerHTML = `<option value="0">自動</option>`;
+                for (let j = 1; j <= numPlayers; j++) {
+                    let name = document.getElementById(`p${j}-name`).value;
+                    if (name) {
+                        select.innerHTML += `<option value="${j}">${name}</option>`;
+                    }
+                }
+                select.value = currentVal;
+            }
+        }
+
+        function updateSum(rowIdx) {
+            let sum = 0;
+            for (let j = 1; j <= numPlayers; j++) {
+                let val = document.querySelector(`.s-${rowIdx}-${j}`).value;
+                if (val !== "") sum += parseInt(val);
+            }
+            let sumCell = document.getElementById(`sum-${rowIdx}`);
+            sumCell.innerText = sum;
+            
+            const startPoint = parseInt(document.getElementById('start-point').value);
+            if (sum === startPoint * 4) {
+                sumCell.className = "sum-cell sum-ok";
+            } else if (sum !== 0) {
+                sumCell.className = "sum-cell sum-err";
+            } else {
+                sumCell.className = "sum-cell";
+            }
+        }
+
+        function toggleManual(rowIdx) {
+            manualRows[rowIdx] = !manualRows[rowIdx];
+            const btn = document.getElementById(`manual-btn-${rowIdx}`);
+            
+            if (manualRows[rowIdx]) {
+                btn.classList.add('active');
+                btn.innerText = '手入力中';
+                for (let j = 1; j <= numPlayers; j++) {
+                    let pInput = document.getElementById(`p-${rowIdx}-${j}`);
+                    pInput.removeAttribute('readonly');
+                    pInput.classList.add('manual-mode');
+                }
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = '手入力';
+                for (let j = 1; j <= numPlayers; j++) {
+                    let pInput = document.getElementById(`p-${rowIdx}-${j}`);
+                    pInput.setAttribute('readonly', true);
+                    pInput.classList.remove('manual-mode');
+                }
+                calculateAll(); 
+            }
+        }
+
+        function calculateAll() {
+            const start = parseInt(document.getElementById('start-point').value);
+            const ret = parseInt(document.getElementById('return-point').value);
+            const uma = document.getElementById('uma').value.split(',').map(Number);
+            const rate = parseInt(document.getElementById('rate').value);
+            const chipRate = parseInt(document.getElementById('chip-rate').value);
+            const oka = (ret - start) * 4 / 1000;
+
+            let totals = Array(numPlayers).fill(0);
+            let chartLabels = ['開始'];
+            let chartData = Array.from({length: numPlayers}, () => [0]);
+
+            for (let i = 1; i <= maxGames; i++) {
+                let isGamePlayed = false;
+                let gamePts = Array(numPlayers).fill(0);
+
+                if (manualRows[i]) {
+                    for (let j = 1; j <= numPlayers; j++) {
+                        let pVal = document.getElementById(`p-${i}-${j}`).value;
+                        if (pVal !== "") {
+                            gamePts[j - 1] = parseFloat(pVal);
+                            isGamePlayed = true;
+                        }
+                    }
+                } else {
+                    let activePlayers = [];
+                    for (let j = 1; j <= numPlayers; j++) {
+                        let val = document.querySelector(`.s-${i}-${j}`).value;
+                        if (val !== "") {
+                            activePlayers.push({ index: j, score: parseInt(val) });
+                        }
+                        document.getElementById(`p-${i}-${j}`).value = ""; 
+                    }
+
+                    if (activePlayers.length === 4) {
+                        isGamePlayed = true;
+                        activePlayers.sort((a, b) => b.score - a.score);
+                        
+                        let tobiCount = 0;
+                        activePlayers.forEach((p, rankIdx) => {
+                            let pt = (p.score - ret) / 1000 + uma[rankIdx];
+                            if (rankIdx === 0) pt += oka; 
+                            if (p.score < 0) { pt -= 10; tobiCount++; }
+                            p.pt = pt;
+                        });
+
+                        if (tobiCount > 0) {
+                            let manualWinnerIdx = parseInt(document.getElementById(`tobi-${i}`).value);
+                            let winner = activePlayers.find(p => p.index === manualWinnerIdx);
+                            if (manualWinnerIdx > 0 && winner) {
+                                winner.pt += (10 * tobiCount);
+                            } else {
+                                activePlayers[0].pt += (10 * tobiCount);
+                            }
+                        }
+
+                        activePlayers.forEach(p => {
+                            document.getElementById(`p-${i}-${p.index}`).value = p.pt.toFixed(1);
+                            gamePts[p.index - 1] = p.pt;
+                        });
+                    }
+                }
+
+                if (isGamePlayed) {
+                    chartLabels.push(`${i}回戦`);
+                    for (let j = 0; j < numPlayers; j++) {
+                        totals[j] += gamePts[j];
+                        chartData[j].push(totals[j]);
+                    }
+                }
+            }
+
+            let moneys = [];
+            for (let j = 1; j <= numPlayers; j++) {
+                let chip = parseInt(document.getElementById(`chip${j}`).value) || 0;
+                let finalPt = totals[j - 1];
+                document.getElementById(`total-pt${j}`).innerText = finalPt.toFixed(1);
+                
+                let money = (finalPt * rate * 10) + (chip * chipRate);
+                moneys.push(money);
+                document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
+            }
+
+            if(pointChart) {
+                let activeDatasets = [];
+                for (let j = 0; j < numPlayers; j++) {
+                    let name = document.getElementById(`p${j+1}-name`).value.trim();
+                    if (name !== "") {
+                        activeDatasets.push({
+                            label: name,
+                            data: chartData[j],
+                            borderColor: colors[j % colors.length],
+                            backgroundColor: colors[j % colors.length],
+                            tension: 0.1,
+                            fill: false
+                        });
+                    }
+                }
+                pointChart.data.labels = chartLabels;
+                pointChart.data.datasets = activeDatasets;
+                pointChart.update();
+            }
+            
+            return { totals, moneys };
+        }
+
+        function saveCurrentData() {
+            let calcResult = calculateAll();
+            const date = document.getElementById('game-date').value;
+            if (!date) return;
+
+            let dayData = { 
+                names: [], scores: [], chips: [], tobiWinners: [], 
+                totals: calcResult.totals, moneys: calcResult.moneys,
+                manualRows: [...manualRows], points: []
+            };
+
+            for (let j = 1; j <= numPlayers; j++) {
+                dayData.names.push(document.getElementById(`p${j}-name`).value);
+                dayData.chips.push(document.getElementById(`chip${j}`).value);
+            }
+
+            for (let i = 1; i <= maxGames; i++) {
+                let rowScore = [];
+                let rowPoint = [];
+                for (let j = 1; j <= numPlayers; j++) {
+                    rowScore.push(document.querySelector(`.s-${i}-${j}`).value);
+                    rowPoint.push(document.getElementById(`p-${i}-${j}`).value);
+                }
+                dayData.scores.push(rowScore);
+                dayData.points.push(rowPoint);
+                dayData.tobiWinners.push(document.getElementById(`tobi-${i}`).value);
+            }
+
+            db[date] = dayData;
+            localStorage.setItem('mahjongDB', JSON.stringify(db));
+            alert(`${date} のデータを保存しました！\n「通算成績」ボタンから結果を確認できます。`);
+        }
+
+        function loadDateData() {
+            const date = document.getElementById('game-date').value;
+            const data = db[date];
+
+            for (let i = 1; i <= maxGames; i++) {
+                for (let j = 1; j <= numPlayers; j++) {
+                    document.querySelector(`.s-${i}-${j}`).value = "";
+                    document.getElementById(`p-${i}-${j}`).value = "";
+                }
+                document.getElementById(`tobi-${i}`).value = "0";
+                
+                manualRows[i] = false;
+                let btn = document.getElementById(`manual-btn-${i}`);
+                btn.classList.remove('active');
+                btn.innerText = '手入力';
+                for (let j = 1; j <= numPlayers; j++) {
+                    let pInput = document.getElementById(`p-${i}-${j}`);
+                    pInput.setAttribute('readonly', true);
+                    pInput.classList.remove('manual-mode');
+                }
+                updateSum(i);
+            }
+            for (let j = 1; j <= numPlayers; j++) document.getElementById(`chip${j}`).value = "0";
+
+            if (data) {
+                for (let j = 1; j <= numPlayers; j++) {
+                    document.getElementById(`p${j}-name`).value = data.names[j-1];
+                    document.getElementById(`p${j}-name`).dispatchEvent(new Event('input')); 
+                    document.getElementById(`chip${j}`).value = data.chips[j-1];
+                }
+                
+                manualRows = data.manualRows || new Array(maxGames + 1).fill(false);
+                
+                for (let i = 1; i <= maxGames; i++) {
+                    for (let j = 1; j <= numPlayers; j++) {
+                        document.querySelector(`.s-${i}-${j}`).value = data.scores[i-1][j-1];
+                    }
+                    if(data.tobiWinners) document.getElementById(`tobi-${i}`).value = data.tobiWinners[i-1];
+                    
+                    if (manualRows[i]) {
+                        let btn = document.getElementById(`manual-btn-${i}`);
+                        btn.classList.add('active');
+                        btn.innerText = '手入力中';
+                        for (let j = 1; j <= numPlayers; j++) {
+                            let pInput = document.getElementById(`p-${i}-${j}`);
+                            pInput.removeAttribute('readonly');
+                            pInput.classList.add('manual-mode');
+                            if (data.points && data.points[i-1]) {
+                                pInput.value = data.points[i-1][j-1];
+                            }
+                        }
+                    }
+                    updateSum(i);
+                }
+            }
+            calculateAll();
+        }
+
+        // リセット機能の追加
+        function resetTodayData() {
+            const date = document.getElementById('game-date').value;
+            if (confirm(`${date} の入力データをすべて消去してもよろしいですか？\n（※一度消すと元に戻せません）`)) {
+                // 保存されているデータからも削除する
+                if (db[date]) {
+                    delete db[date];
+                    localStorage.setItem('mahjongDB', JSON.stringify(db));
+                }
+                
+                // 画面上の入力をすべてクリア
+                for (let i = 1; i <= maxGames; i++) {
+                    for (let j = 1; j <= numPlayers; j++) {
+                        document.querySelector(`.s-${i}-${j}`).value = "";
+                        document.getElementById(`p-${i}-${j}`).value = "";
+                    }
+                    document.getElementById(`tobi-${i}`).value = "0";
+                    
+                    manualRows[i] = false;
+                    let btn = document.getElementById(`manual-btn-${i}`);
+                    btn.classList.remove('active');
+                    btn.innerText = '手入力';
+                    for (let j = 1; j <= numPlayers; j++) {
+                        let pInput = document.getElementById(`p-${i}-${j}`);
+                        pInput.setAttribute('readonly', true);
+                        pInput.classList.remove('manual-mode');
+                    }
+                    updateSum(i);
+                }
+                for (let j = 1; j <= numPlayers; j++) document.getElementById(`chip${j}`).value = "0";
+                
+                calculateAll();
+                alert(`${date} のデータをリセットしました。`);
+            }
+        }
+
+        function updateCumulativeStats() {
+            let dates = Object.keys(db).sort();
+            let allStats = {}; 
+            let uniquePlayers = new Set();
+            
+            for (let d of dates) {
+                let day = db[d];
+                if (!day.totals) continue;
+                for (let j = 0; j < numPlayers; j++) {
+                    let name = day.names[j];
+                    if (name && name.trim() !== "" && day.scores.some(row => row[j] !== "")) {
+                        uniquePlayers.add(name.trim());
+                    }
+                }
+            }
+
+            uniquePlayers.forEach(p => {
+                allStats[p] = { games: 0, pt: 0, money: 0, runningPt: [0] };
+            });
+
+            let chartLabels = ['開始'];
+
+            for (let d of dates) {
+                let day = db[d];
+                if (!day.totals) continue;
+                
+                chartLabels.push(d);
+                
+                uniquePlayers.forEach(p => {
+                    let pIdx = day.names.findIndex(n => n && n.trim() === p);
+                    let dayPt = 0;
+                    if (pIdx !== -1) {
+                        let gamesPlayed = day.scores.filter(row => row[pIdx] !== "").length;
+                        if(gamesPlayed > 0) {
+                            allStats[p].games += gamesPlayed;
+                            dayPt = day.totals[pIdx] || 0;
+                            allStats[p].pt += dayPt;
+                            allStats[p].money += (day.moneys[pIdx] || 0);
+                        }
+                    }
+                    let prevPt = allStats[p].runningPt[allStats[p].runningPt.length - 1];
+                    allStats[p].runningPt.push(prevPt + dayPt);
+                });
+            }
+
+            const tbody = document.getElementById('cumulative-body');
+            tbody.innerHTML = "";
+            let sortedPlayers = Array.from(uniquePlayers).sort((a, b) => allStats[b].pt - allStats[a].pt);
+            
+            sortedPlayers.forEach(p => {
+                let st = allStats[p];
+                tbody.innerHTML += `<tr>
+                    <td><strong>${p}</strong></td>
+                    <td>${st.games} 半荘</td>
+                    <td>${st.pt.toFixed(1)}</td>
+                    <td style="color:#059669; font-weight:bold;">¥${Math.round(st.money).toLocaleString()}</td>
+                </tr>`;
+            });
+            
+            if (uniquePlayers.size === 0) {
+                tbody.innerHTML = `<tr><td colspan="4">※データが保存されていません</td></tr>`;
+            }
+
+            if(cumulativeChart) {
+                let datasets = [];
+                let colorIdx = 0;
+                sortedPlayers.forEach(p => {
+                    datasets.push({
+                        label: p,
+                        data: allStats[p].runningPt,
+                        borderColor: colors[colorIdx % colors.length],
+                        backgroundColor: colors[colorIdx % colors.length],
+                        tension: 0.1,
+                        fill: false
+                    });
+                    colorIdx++;
+                });
+                
+                cumulativeChart.data.labels = chartLabels;
+                cumulativeChart.data.datasets = datasets;
+                cumulativeChart.update();
+            }
+        }
+    </script>
+</body>
+</html>
