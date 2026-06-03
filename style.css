@@ -16,7 +16,7 @@ label { font-size: 0.8em; font-weight: bold; }
 input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 
 .table-wrapper { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 900px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 950px; }
 th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
 th { background: #f8f9fa; white-space: nowrap; }
 
@@ -33,3 +33,15 @@ th { background: #f8f9fa; white-space: nowrap; }
 
 .total-row { font-weight: bold; background: #f3f4f6; }
 .money-row { font-weight: bold; color: #059669; font-size: 1.1em; }
+
+/* トビ賞プルダウンと手入力ボタンのデザイン */
+.tobi-select { width: 90px; padding: 4px; font-size: 0.9em; }
+.manual-btn { padding: 5px 8px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
+.manual-btn.active { background: #f59e0b; }
+
+/* ポイント表の入力枠（通常時は枠線なしのテキスト風） */
+.pt-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 1em; color: inherit; pointer-events: none; }
+/* 手入力モード時のスタイル */
+.pt-input.manual-mode { pointer-events: auto; border: 1px solid #f59e0b; background: #fef3c7; border-radius: 4px; padding: 4px; }
+/* inputの矢印を隠す */
+.pt-input::-webkit-outer-spin-button, .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
