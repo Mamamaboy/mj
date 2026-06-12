@@ -3,52 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻雀成績管理システム V6</title>
+    <title>麻雀成績管理システム - M.LEAGUE Design</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        /* 白基調のM.LEAGUE風デザイン */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #ffffff; margin: 0; padding: 20px; color: #111111; }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; color: #064e3b; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { font-size: 1.2em; border-left: 5px solid #10b981; padding-left: 10px; margin-bottom: 15px; }
+        
+        /* ヘッダーとロゴ配置 */
+        .app-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+        .app-logo { height: 40px; margin-right: 15px; }
+        h1 { text-align: center; color: #000000; margin: 0; font-size: 1.8em; font-weight: bold; }
+
+        .card { background: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
+        /* セクションタイトル：緑・赤のアクセント */
+        h2 { font-size: 1.2em; border-left: 6px solid #000000; padding-left: 10px; margin-bottom: 15px; }
+        .setting-section h2 { border-left-color: #007a33; } /* 緑 */
+        .score-section h2 { border-left-color: #e4002b; }   /* 赤 */
+        .point-section h2 { border-left-color: #007a33; }   /* 緑 */
+        .rank-section h2 { border-left-color: #e4002b; }    /* 赤 */
 
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .nav-btn { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: 0.2s; }
-        .nav-btn:hover { background: #2563eb; }
-        .nav-btn:active { transform: translateY(2px); box-shadow: none; }
+        
+        .date-selector { display: flex; align-items: center; gap: 10px; font-weight: bold; background: #f9fafb; border: 1px solid #d1d5db; padding: 15px; border-radius: 8px; flex-wrap: wrap; flex: 1; }
+        .date-selector input { padding: 8px; font-size: 1.1em; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* ボタン類のデザイン */
+        .save-btn { padding: 8px 15px; background: #007a33; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .save-btn:hover { background: #006629; }
+        .reset-btn { padding: 8px 15px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .reset-btn:hover { background: #374151; }
+        
+        .calc-btn { width: 100%; padding: 15px; background: #e4002b; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(228, 0, 43, 0.2); transition: 0.2s; }
+        .calc-btn:hover { background: #c30025; }
+        .calc-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        .date-selector { display: flex; align-items: center; gap: 10px; font-weight: bold; background: #ecfdf5; border: 2px solid #10b981; padding: 15px; border-radius: 8px; flex-wrap: wrap; flex: 1; }
-        .date-selector input { padding: 8px; font-size: 1.1em; }
-        .save-btn { padding: 8px 15px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        /* リセットボタンのデザイン */
-        .reset-btn { padding: 8px 15px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .reset-btn:hover { background: #dc2626; }
+        .nav-btn { padding: 10px 20px; background: #000000; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: 0.2s; }
+        .nav-btn:hover { background: #333333; }
 
         .settings-grid { display: flex; gap: 20px; flex-wrap: wrap; }
         .names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 2; min-width: 300px; }
         .rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; flex: 1; min-width: 200px; }
         label { font-size: 0.8em; font-weight: bold; }
-        input, select { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
 
+        /* テーブルデザイン：白背景ベース */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 1050px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background: #f8f9fa; white-space: nowrap; }
+        th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
+        th { background: #ffffff; border-bottom: 2px solid #d1d5db; white-space: nowrap; font-weight: bold; }
 
-        .score-section table thead th { background: #d1fae5; }
-        .point-section table thead th { background: #dbeafe; }
-        .rank-section table thead th { background: #fef3c7; }
+        /* プラス・マイナスの色分け */
+        .sum-cell { font-weight: bold; color: #6b7280; }
+        .sum-ok { color: #007a33; } /* 緑 */
+        .sum-err { color: #e4002b; } /* 赤 */
 
-        .sum-cell { font-weight: bold; color: #6b7280; background: #f3f4f6; }
-        .sum-ok { color: #10b981; }
-        .sum-err { color: #ef4444; }
-
-        .calc-btn { width: 100%; padding: 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: 0.2s; }
-        .calc-btn:active { transform: translateY(2px); box-shadow: none; }
-
-        .total-row { font-weight: bold; background: #f3f4f6; }
-        .money-row { font-weight: bold; color: #059669; font-size: 1.1em; }
+        .total-row { font-weight: bold; background: #f9fafb; }
+        .money-row { font-weight: bold; font-size: 1.1em; }
+        .money-plus { color: #007a33; } /* 収支プラス：緑 */
+        .money-minus { color: #e4002b; } /* 収支マイナス：赤 */
 
         .tobi-select { width: 90px; padding: 4px; font-size: 0.9em; }
         .manual-btn { padding: 5px 8px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
@@ -59,23 +74,26 @@
         .pt-input::-webkit-outer-spin-button, .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         .chart-container { position: relative; height: 350px; width: 100%; margin-top: 10px; }
-        
         #cumulative-view { display: none; }
+        .save-note { font-size: 0.8em; color: #e4002b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🀄 麻雀成績管理 V6</h1>
+        <div class="app-header">
+            <h1>🀄 麻雀成績管理 V3.3</h1>
+        </div>
 
         <div id="main-view">
             <div class="header-actions">
                 <div class="date-selector">
-                    <label for="game-date">📅 記録日を選択: </label>
+                    <label for="game-date">📅 記録日:</label>
                     <input type="date" id="game-date">
                     <button onclick="saveCurrentData()" class="save-btn">この日のデータを保存</button>
-                    <button onclick="resetTodayData()" class="reset-btn">🗑️ 入力をリセット</button>
+                    <button onclick="resetTodayData()" class="reset-btn">🗑️ リセット</button>
+                    <span class="save-note">※日付を変える前に必ず保存！</span>
                 </div>
-                <button class="nav-btn" onclick="toggleView('cumulative')">🏆 通算成績・グラフを見る</button>
+                <button class="nav-btn" onclick="toggleView('cumulative')">🏆 通算成績・グラフへ</button>
             </div>
 
             <section class="card setting-section">
@@ -99,8 +117,6 @@
                 </div>
             </section>
 
-            <p style="text-align: right; font-size: 0.8em; color: #666; margin: 0 0 5px 0;">※表は横にスクロールできます 👉</p>
-
             <section class="card score-section">
                 <h2>点数入力（休みの人は空欄）</h2>
                 <div class="table-wrapper">
@@ -110,9 +126,7 @@
                                 <th>回</th>
                                 <th class="p1-label">Aさん</th><th class="p2-label">Bさん</th><th class="p3-label">Cさん</th>
                                 <th class="p4-label">Dさん</th><th class="p5-label">Eさん</th><th class="p6-label">Fさん</th>
-                                <th>合計</th>
-                                <th>トビ賞</th>
-                                <th>手入力</th>
+                                <th>合計</th><th>トビ賞</th><th>手入力</th>
                             </tr>
                         </thead>
                         <tbody id="score-body"></tbody>
@@ -165,13 +179,13 @@
 
         <div id="cumulative-view">
             <div class="header-actions">
-                <button class="nav-btn" style="background:#6b7280;" onclick="toggleView('main')">◀ 戻る (当日の入力画面へ)</button>
+                <button class="nav-btn" style="background:#4b5563;" onclick="toggleView('main')">◀ 入力画面へ戻る</button>
             </div>
 
             <section class="card rank-section">
                 <h2>🏆 通算成績表</h2>
                 <div class="table-wrapper">
-                    <table id="cumulative-table" style="min-width: 600px;">
+                    <table id="cumulative-table">
                         <thead>
                             <tr><th>名前</th><th>プレイ数</th><th>通算Pt</th><th>通算収支(目安)</th></tr>
                         </thead>
@@ -181,7 +195,7 @@
             </section>
 
             <section class="card chart-section">
-                <h2>📈 プレイヤー別 通算ポイント推移 (日付順)</h2>
+                <h2>📈 プレイヤー別 通算ポイント推移</h2>
                 <div class="chart-container" style="height: 400px;">
                     <canvas id="cumulativeChart"></canvas>
                 </div>
@@ -193,7 +207,7 @@
     <script>
         const maxGames = 20;
         const numPlayers = 6;
-        const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa', '#f472b6', '#ec4899', '#14b8a6', '#f97316'];
+        const colors = ['#007a33', '#e4002b', '#1d4ed8', '#f59e0b', '#8b5cf6', '#000000']; // 緑, 赤, 青, 黄, 紫, 黒
         
         let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
         let manualRows = new Array(maxGames + 1).fill(false);
@@ -246,14 +260,14 @@
             pointChart = new Chart(ctx1, {
                 type: 'line',
                 data: { labels: ['開始'], datasets: [] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'ポイント' } } } }
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
             const ctx2 = document.getElementById('cumulativeChart').getContext('2d');
             cumulativeChart = new Chart(ctx2, {
                 type: 'line',
                 data: { labels: [], datasets: [] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: '通算ポイント' } } } }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
@@ -273,9 +287,7 @@
                 select.innerHTML = `<option value="0">自動</option>`;
                 for (let j = 1; j <= numPlayers; j++) {
                     let name = document.getElementById(`p${j}-name`).value;
-                    if (name) {
-                        select.innerHTML += `<option value="${j}">${name}</option>`;
-                    }
+                    if (name) { select.innerHTML += `<option value="${j}">${name}</option>`; }
                 }
                 select.value = currentVal;
             }
@@ -306,7 +318,7 @@
             
             if (manualRows[rowIdx]) {
                 btn.classList.add('active');
-                btn.innerText = '手入力中';
+                btn.innerText = '編集中';
                 for (let j = 1; j <= numPlayers; j++) {
                     let pInput = document.getElementById(`p-${rowIdx}-${j}`);
                     pInput.removeAttribute('readonly');
@@ -388,7 +400,7 @@
                 }
 
                 if (isGamePlayed) {
-                    chartLabels.push(`${i}回戦`);
+                    chartLabels.push(`${i}回`);
                     for (let j = 0; j < numPlayers; j++) {
                         totals[j] += gamePts[j];
                         chartData[j].push(totals[j]);
@@ -404,7 +416,10 @@
                 
                 let money = (finalPt * rate * 10) + (chip * chipRate);
                 moneys.push(money);
-                document.getElementById(`money${j}`).innerText = `¥${Math.round(money).toLocaleString()}`;
+                
+                let moneyEl = document.getElementById(`money${j}`);
+                moneyEl.innerText = `¥${Math.round(money).toLocaleString()}`;
+                moneyEl.className = money >= 0 ? "money-plus" : "money-minus";
             }
 
             if(pointChart) {
@@ -413,12 +428,9 @@
                     let name = document.getElementById(`p${j+1}-name`).value.trim();
                     if (name !== "") {
                         activeDatasets.push({
-                            label: name,
-                            data: chartData[j],
-                            borderColor: colors[j % colors.length],
-                            backgroundColor: colors[j % colors.length],
-                            tension: 0.1,
-                            fill: false
+                            label: name, data: chartData[j],
+                            borderColor: colors[j % colors.length], backgroundColor: colors[j % colors.length],
+                            tension: 0.1, fill: false
                         });
                     }
                 }
@@ -460,7 +472,7 @@
 
             db[date] = dayData;
             localStorage.setItem('mahjongDB', JSON.stringify(db));
-            alert(`${date} のデータを保存しました！\n「通算成績」ボタンから結果を確認できます。`);
+            alert(`${date} のデータを保存しました！\n「通算成績」画面で結果を確認できます。`);
         }
 
         function loadDateData() {
@@ -505,7 +517,7 @@
                     if (manualRows[i]) {
                         let btn = document.getElementById(`manual-btn-${i}`);
                         btn.classList.add('active');
-                        btn.innerText = '手入力中';
+                        btn.innerText = '編集中';
                         for (let j = 1; j <= numPlayers; j++) {
                             let pInput = document.getElementById(`p-${i}-${j}`);
                             pInput.removeAttribute('readonly');
@@ -521,39 +533,15 @@
             calculateAll();
         }
 
-        // リセット機能の追加
         function resetTodayData() {
             const date = document.getElementById('game-date').value;
-            if (confirm(`${date} の入力データをすべて消去してもよろしいですか？\n（※一度消すと元に戻せません）`)) {
-                // 保存されているデータからも削除する
+            if (confirm(`${date} のデータを完全に消去しますか？`)) {
                 if (db[date]) {
                     delete db[date];
                     localStorage.setItem('mahjongDB', JSON.stringify(db));
                 }
-                
-                // 画面上の入力をすべてクリア
-                for (let i = 1; i <= maxGames; i++) {
-                    for (let j = 1; j <= numPlayers; j++) {
-                        document.querySelector(`.s-${i}-${j}`).value = "";
-                        document.getElementById(`p-${i}-${j}`).value = "";
-                    }
-                    document.getElementById(`tobi-${i}`).value = "0";
-                    
-                    manualRows[i] = false;
-                    let btn = document.getElementById(`manual-btn-${i}`);
-                    btn.classList.remove('active');
-                    btn.innerText = '手入力';
-                    for (let j = 1; j <= numPlayers; j++) {
-                        let pInput = document.getElementById(`p-${i}-${j}`);
-                        pInput.setAttribute('readonly', true);
-                        pInput.classList.remove('manual-mode');
-                    }
-                    updateSum(i);
-                }
-                for (let j = 1; j <= numPlayers; j++) document.getElementById(`chip${j}`).value = "0";
-                
-                calculateAll();
-                alert(`${date} のデータをリセットしました。`);
+                loadDateData(); 
+                alert(`リセットしました。`);
             }
         }
 
@@ -573,9 +561,7 @@
                 }
             }
 
-            uniquePlayers.forEach(p => {
-                allStats[p] = { games: 0, pt: 0, money: 0, runningPt: [0] };
-            });
+            uniquePlayers.forEach(p => { allStats[p] = { games: 0, pt: 0, money: 0, runningPt: [0] }; });
 
             let chartLabels = ['開始'];
 
@@ -608,11 +594,12 @@
             
             sortedPlayers.forEach(p => {
                 let st = allStats[p];
+                let moneyColorClass = st.money >= 0 ? "money-plus" : "money-minus";
                 tbody.innerHTML += `<tr>
                     <td><strong>${p}</strong></td>
                     <td>${st.games} 半荘</td>
                     <td>${st.pt.toFixed(1)}</td>
-                    <td style="color:#059669; font-weight:bold;">¥${Math.round(st.money).toLocaleString()}</td>
+                    <td class="${moneyColorClass}">¥${Math.round(st.money).toLocaleString()}</td>
                 </tr>`;
             });
             
@@ -625,12 +612,9 @@
                 let colorIdx = 0;
                 sortedPlayers.forEach(p => {
                     datasets.push({
-                        label: p,
-                        data: allStats[p].runningPt,
-                        borderColor: colors[colorIdx % colors.length],
-                        backgroundColor: colors[colorIdx % colors.length],
-                        tension: 0.1,
-                        fill: false
+                        label: p, data: allStats[p].runningPt,
+                        borderColor: colors[colorIdx % colors.length], backgroundColor: colors[colorIdx % colors.length],
+                        tension: 0.1, fill: false
                     });
                     colorIdx++;
                 });
