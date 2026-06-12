@@ -49,7 +49,7 @@
         label { font-size: 0.8em; font-weight: bold; }
         input, select { width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
 
-        /* テーブルデザイン：白背景ベース */
+        /* テーブルデザイン */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 1050px; }
         th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
@@ -81,7 +81,7 @@
 <body>
     <div class="container">
         <div class="app-header">
-            <h1>🀄 麻雀成績管理 V3.3</h1>
+            <h1>🀄 麻雀成績管理 V3.4</h1>
         </div>
 
         <div id="main-view">
@@ -162,7 +162,7 @@
                                 <td>当日Pt</td><td id="total-pt1">0</td><td id="total-pt2">0</td><td id="total-pt3">0</td><td id="total-pt4">0</td><td id="total-pt5">0</td><td id="total-pt6">0</td>
                             </tr>
                             <tr class="money-row">
-                                <td>当日収支</td><td id="money1">¥0</td><td id="money2">¥0</td><td id="money3">¥0</td><td id="money4">¥0</td><td id="money5">¥0</td><td id="money6">¥0</td>
+                                <td>当日収支</td><td id="money1">希望ドル0</td><td id="money2">希望ドル0</td><td id="money3">希望ドル0</td><td id="money4">希望ドル0</td><td id="money5">希望ドル0</td><td id="money6">希望ドル0</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -207,7 +207,7 @@
     <script>
         const maxGames = 20;
         const numPlayers = 6;
-        const colors = ['#007a33', '#e4002b', '#1d4ed8', '#f59e0b', '#8b5cf6', '#000000']; // 緑, 赤, 青, 黄, 紫, 黒
+        const colors = ['#007a33', '#e4002b', '#1d4ed8', '#f59e0b', '#8b5cf6', '#000000']; 
         
         let db = JSON.parse(localStorage.getItem('mahjongDB')) || {};
         let manualRows = new Array(maxGames + 1).fill(false);
@@ -418,7 +418,8 @@
                 moneys.push(money);
                 
                 let moneyEl = document.getElementById(`money${j}`);
-                moneyEl.innerText = `¥${Math.round(money).toLocaleString()}`;
+                // 円マークを「希望ドル」に変更
+                moneyEl.innerText = `希望ドル${Math.round(money).toLocaleString()}`;
                 moneyEl.className = money >= 0 ? "money-plus" : "money-minus";
             }
 
@@ -473,6 +474,9 @@
             db[date] = dayData;
             localStorage.setItem('mahjongDB', JSON.stringify(db));
             alert(`${date} のデータを保存しました！\n「通算成績」画面で結果を確認できます。`);
+            
+            // 保存直後に通算成績も再計算
+            updateCumulativeStats();
         }
 
         function loadDateData() {
@@ -555,7 +559,17 @@
                 if (!day.totals) continue;
                 for (let j = 0; j < numPlayers; j++) {
                     let name = day.names[j];
-                    if (name && name.trim() !== "" && day.scores.some(row => row[j] !== "")) {
+                    // 名前が入っていて、(点数スコアがあるか、または手入力モードでポイントがある) 場合に参加とみなす
+                    let hasPlayedAny = false;
+                    for (let i = 0; i < maxGames; i++) {
+                        let hasScore = day.scores[i] && day.scores[i][j] !== "";
+                        let hasManualPoint = day.manualRows && day.manualRows[i+1] && day.points[i] && day.points[i][j] !== "";
+                        if (hasScore || hasManualPoint) {
+                            hasPlayedAny = true;
+                            break;
+                        }
+                    }
+                    if (name && name.trim() !== "" && hasPlayedAny) {
                         uniquePlayers.add(name.trim());
                     }
                 }
@@ -575,7 +589,16 @@
                     let pIdx = day.names.findIndex(n => n && n.trim() === p);
                     let dayPt = 0;
                     if (pIdx !== -1) {
-                        let gamesPlayed = day.scores.filter(row => row[pIdx] !== "").length;
+                        let gamesPlayed = 0;
+                        // 手入力と自動計算の両方をゲーム数としてカウントするロジック
+                        for (let i = 0; i < maxGames; i++) {
+                            let hasScore = day.scores[i] && day.scores[i][pIdx] !== "";
+                            let hasManualPoint = day.manualRows && day.manualRows[i+1] && day.points[i] && day.points[i][pIdx] !== "";
+                            if (hasScore || hasManualPoint) {
+                                gamesPlayed++;
+                            }
+                        }
+
                         if(gamesPlayed > 0) {
                             allStats[p].games += gamesPlayed;
                             dayPt = day.totals[pIdx] || 0;
@@ -599,7 +622,7 @@
                     <td><strong>${p}</strong></td>
                     <td>${st.games} 半荘</td>
                     <td>${st.pt.toFixed(1)}</td>
-                    <td class="${moneyColorClass}">¥${Math.round(st.money).toLocaleString()}</td>
+                    <td class="${moneyColorClass}">希望ドル${Math.round(st.money).toLocaleString()}</td>
                 </tr>`;
             });
             
