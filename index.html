@@ -7,34 +7,33 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* 白基調のM.LEAGUE風デザイン */
         body { font-family: "Helvetica Neue", Arial, sans-serif; background: #ffffff; margin: 0; padding: 20px; color: #111111; }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* ヘッダーとロゴ配置 */
         .app-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
         .app-logo { height: 40px; margin-right: 15px; }
         h1 { text-align: center; color: #000000; margin: 0; font-size: 1.8em; font-weight: bold; }
 
         .card { background: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         
-        /* セクションタイトル：緑・赤のアクセント */
         h2 { font-size: 1.2em; border-left: 6px solid #000000; padding-left: 10px; margin-bottom: 15px; }
-        .setting-section h2 { border-left-color: #007a33; } /* 緑 */
-        .score-section h2 { border-left-color: #e4002b; }   /* 赤 */
-        .point-section h2 { border-left-color: #007a33; }   /* 緑 */
-        .rank-section h2 { border-left-color: #e4002b; }    /* 赤 */
+        .setting-section h2 { border-left-color: #007a33; } 
+        .score-section h2 { border-left-color: #e4002b; }   
+        .point-section h2 { border-left-color: #007a33; }   
+        .rank-section h2 { border-left-color: #e4002b; }    
+        .backup-section h2 { border-left-color: #1d4ed8; } /* バックアップ用：青 */
 
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         
         .date-selector { display: flex; align-items: center; gap: 10px; font-weight: bold; background: #f9fafb; border: 1px solid #d1d5db; padding: 15px; border-radius: 8px; flex-wrap: wrap; flex: 1; }
         .date-selector input { padding: 8px; font-size: 1.1em; border: 1px solid #ccc; border-radius: 4px; }
         
-        /* ボタン類のデザイン */
         .save-btn { padding: 8px 15px; background: #007a33; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .save-btn:hover { background: #006629; }
         .reset-btn { padding: 8px 15px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .reset-btn:hover { background: #374151; }
+        .backup-btn { padding: 8px 15px; background: #1d4ed8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .backup-btn:hover { background: #1e3a8a; }
         
         .calc-btn { width: 100%; padding: 15px; background: #e4002b; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 6px rgba(228, 0, 43, 0.2); transition: 0.2s; }
         .calc-btn:hover { background: #c30025; }
@@ -49,21 +48,19 @@
         label { font-size: 0.8em; font-weight: bold; }
         input, select { width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
 
-        /* テーブルデザイン */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; min-width: 1050px; }
         th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: center; }
         th { background: #ffffff; border-bottom: 2px solid #d1d5db; white-space: nowrap; font-weight: bold; }
 
-        /* プラス・マイナスの色分け */
         .sum-cell { font-weight: bold; color: #6b7280; }
-        .sum-ok { color: #007a33; } /* 緑 */
-        .sum-err { color: #e4002b; } /* 赤 */
+        .sum-ok { color: #007a33; } 
+        .sum-err { color: #e4002b; } 
 
         .total-row { font-weight: bold; background: #f9fafb; }
         .money-row { font-weight: bold; font-size: 1.1em; }
-        .money-plus { color: #007a33; } /* 収支プラス：緑 */
-        .money-minus { color: #e4002b; } /* 収支マイナス：赤 */
+        .money-plus { color: #007a33; } 
+        .money-minus { color: #e4002b; } 
 
         .tobi-select { width: 90px; padding: 4px; font-size: 0.9em; }
         .manual-btn { padding: 5px 8px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
@@ -81,7 +78,7 @@
 <body>
     <div class="container">
         <div class="app-header">
-            <h1>🀄 麻雀成績管理 V3.4</h1>
+            <h1>🀄 麻雀成績管理 V3.5</h1>
         </div>
 
         <div id="main-view">
@@ -95,6 +92,19 @@
                 </div>
                 <button class="nav-btn" onclick="toggleView('cumulative')">🏆 通算成績・グラフへ</button>
             </div>
+
+            <!-- 新機能：データバックアップセクション -->
+            <section class="card backup-section">
+                <h2>💾 データのバックアップ・復元</h2>
+                <p style="font-size: 0.9em; color: #4b5563; margin-top: 0;">※ブラウザの仕様でデータが消えてしまうのを防ぐため、定期的なバックアップ（ダウンロード）をおすすめします。</p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="exportData()" class="backup-btn">📥 データをバックアップ (ダウンロード)</button>
+                    <label class="reset-btn" style="cursor: pointer;">
+                        📤 データを復元 (ファイルを選択)
+                        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    </label>
+                </div>
+            </section>
 
             <section class="card setting-section">
                 <h2>基本設定 & メンバー（最大6名）</h2>
@@ -243,6 +253,49 @@
             updateTobiOptions();
             loadDateData();
         };
+
+        // --- バックアップ・復元機能 ---
+        function exportData() {
+            const dataStr = localStorage.getItem('mahjongDB');
+            if (!dataStr || dataStr === "{}") {
+                alert("バックアップするデータがありません。");
+                return;
+            }
+            // JSONファイルとしてダウンロードさせる
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `mahjong_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (typeof importedData === 'object') {
+                        localStorage.setItem('mahjongDB', JSON.stringify(importedData));
+                        db = importedData;
+                        alert("データの復元が完了しました！画面を更新します。");
+                        location.reload();
+                    } else {
+                        alert("無効なデータファイルです。");
+                    }
+                } catch (error) {
+                    alert("ファイルの読み込みに失敗しました。");
+                }
+            };
+            reader.readAsText(file);
+        }
+        // ------------------------------
 
         function toggleView(view) {
             if (view === 'cumulative') {
@@ -418,7 +471,6 @@
                 moneys.push(money);
                 
                 let moneyEl = document.getElementById(`money${j}`);
-                // 円マークを「希望ドル」に変更
                 moneyEl.innerText = `希望ドル${Math.round(money).toLocaleString()}`;
                 moneyEl.className = money >= 0 ? "money-plus" : "money-minus";
             }
@@ -473,9 +525,8 @@
 
             db[date] = dayData;
             localStorage.setItem('mahjongDB', JSON.stringify(db));
-            alert(`${date} のデータを保存しました！\n「通算成績」画面で結果を確認できます。`);
+            alert(`${date} のデータを保存しました！\n※念のため定期的にバックアップ(ダウンロード)もお願いします。`);
             
-            // 保存直後に通算成績も再計算
             updateCumulativeStats();
         }
 
@@ -559,7 +610,6 @@
                 if (!day.totals) continue;
                 for (let j = 0; j < numPlayers; j++) {
                     let name = day.names[j];
-                    // 名前が入っていて、(点数スコアがあるか、または手入力モードでポイントがある) 場合に参加とみなす
                     let hasPlayedAny = false;
                     for (let i = 0; i < maxGames; i++) {
                         let hasScore = day.scores[i] && day.scores[i][j] !== "";
@@ -590,7 +640,6 @@
                     let dayPt = 0;
                     if (pIdx !== -1) {
                         let gamesPlayed = 0;
-                        // 手入力と自動計算の両方をゲーム数としてカウントするロジック
                         for (let i = 0; i < maxGames; i++) {
                             let hasScore = day.scores[i] && day.scores[i][pIdx] !== "";
                             let hasManualPoint = day.manualRows && day.manualRows[i+1] && day.points[i] && day.points[i][pIdx] !== "";
